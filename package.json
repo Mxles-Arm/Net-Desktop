@@ -1,0 +1,11 @@
+{
+  "name": "cai-net",
+  "private": true,
+  "description": "CAI Net (Net Desktop) — classroom network simulator. Run commands from here; the server lives in backend/.",
+  "type": "commonjs",
+  "scripts": {
+    "setup": "npm --prefix backend install",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test"
+  }
+}

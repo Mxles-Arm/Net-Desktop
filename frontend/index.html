@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Net Desktop ห้องทดลองจำลองเครือข่าย LAN และ Wi-Fi ภายในห้องเรียน">
+<title>Net Desktop — Classroom Network Simulator</title>
+<link rel="icon" href="assets/cai-assistant-mascot-v3.png">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/cai.css">
+</head>
+<body>
+<div class="desktop" id="desktop">
+
+<!-- Menu bar -->
+<div class="menubar">
+  <div class="menu-left">
+    <i class="orb"></i>
+    <button class="app-name" data-menu="net">Net Desktop</button>
+    <button class="menu-btn" data-menu="file">File</button>
+    <button class="menu-btn" data-menu="edit">Edit</button>
+    <button class="menu-btn" data-menu="view">View</button>
+    <button class="menu-btn" data-menu="network">Network</button>
+    <button class="menu-btn" data-menu="learn">Learn</button>
+    <button class="menu-btn" data-menu="help">Help</button>
+  </div>
+  <div class="menu-right">
+    <button class="menu-btn user-btn" data-menu="user" id="userMenuBtn">👤 <span id="userName">ผู้เรียน</span></button>
+    <button class="wifi-status" id="wifiStatus" title="เปิดการตั้งค่า Wi-Fi">◔ Wi-Fi</button>
+    <span class="clock" id="clock"></span>
+  </div>
+</div>
+
+<!-- Dropdown menus: each button runs command(data-cmd) -->
+<div class="dropdown" id="menu-net"><button data-cmd="aboutNet">About Net Desktop</button><hr><button data-cmd="systemInfo">System Information</button><button data-cmd="preferences">Preferences…</button></div>
+<div class="dropdown" id="menu-file"><button data-cmd="new">New Workspace <span>⌘N</span></button><button data-cmd="open">Open… (Finder)</button><button data-cmd="save">Save Workspace <span>⌘S</span></button><button data-cmd="export">Export JSON</button><hr><button data-cmd="close">Close Workspace <span>⌘W</span></button></div>
+<div class="dropdown" id="menu-edit"><button data-cmd="details">Workspace Details</button><button data-cmd="undo">Undo <span>⌘Z</span></button><hr><button data-cmd="clear">Clear Workspace</button></div>
+<div class="dropdown" id="menu-view"><button data-cmd="tile">Tile All Windows</button><button data-cmd="zoomIn">Zoom In</button><button data-cmd="zoomOut">Zoom Out</button><button data-cmd="resetView">Actual Size</button><hr><button data-cmd="fullscreen">Enter Full Screen</button></div>
+<div class="dropdown" id="menu-network"><button data-cmd="addRouter">Add Router</button><button data-cmd="addSwitch">Add Switch</button><button data-cmd="addPc">Add Computer</button><button data-cmd="addLaptop">Add Notebook</button><button data-cmd="addAccess">Add Access Point</button><button data-cmd="wire">Connect Cable</button><button data-cmd="wifi">Connect Wi-Fi</button><button data-cmd="wifiSettings">Wi-Fi Settings…</button><hr><button data-cmd="test">Test Network</button><button data-cmd="utility">Network Utility</button><button data-cmd="terminal">Terminal</button></div>
+<div class="dropdown" id="menu-learn"><button data-cmd="missions">Mission Control (ภารกิจ)</button><hr><button data-cmd="pretest">แบบทดสอบก่อนเรียน</button><button data-cmd="posttest">แบบทดสอบหลังเรียน</button><button data-cmd="survey">แบบประเมินความพึงพอใจ</button><hr><button data-cmd="progress">ความคืบหน้าของฉัน</button></div>
+<div class="dropdown" id="menu-help"><button data-cmd="guide">Net Desktop Help</button><button data-cmd="encyclopedia">สารานุกรมอุปกรณ์</button><button data-cmd="shortcuts">Keyboard Shortcuts</button><hr><button data-cmd="aboutNet">About Net Desktop</button></div>
+<div class="dropdown" id="menu-user"><button data-cmd="progress">ความคืบหน้าของฉัน</button><hr><button data-cmd="logout">ออกจากระบบ</button></div>
+
+<!-- Desktop icons -->
+<section class="desktop-icons">
+  <button class="desk-icon" data-open="workspace"><span class="icon workspace-icon"></span>New Workspace</button>
+  <button class="desk-icon" data-action="help"><span class="icon help-icon">?</span>Help</button>
+</section>
+<div class="window-layer" id="windowLayer"></div>
+
+<!-- Dock -->
+<div class="dock-wrap"><nav class="dock">
+  <button class="dock-item" id="assistantDock" data-tip="CAI Assistant (ขอคำใบ้)"><span class="dock-icon mascot"></span></button>
+  <button class="dock-item" data-dock="encyclopedia" data-tip="Net Encyclopedia"><span class="dock-icon safari-app"></span></button>
+  <span class="dock-sep"></span>
+  <button class="dock-item" data-dock="workspace" data-tip="Workspaces"><span class="dock-icon app-icon workspace-app">▣</span></button>
+  <button class="dock-item" data-dock="lessons" data-tip="Mission Control"><span class="dock-icon app-icon lesson-app">✎</span></button>
+  <button class="dock-item" data-dock="files" data-tip="Finder (งานที่บันทึก)"><span class="dock-icon app-icon files-app">▤</span></button>
+  <button class="dock-item" data-dock="utility" data-tip="Network Utility"><span class="dock-icon app-icon utility-app">⌖</span></button>
+  <button class="dock-item" data-dock="terminal" data-tip="Terminal"><span class="dock-icon app-icon terminal-app">&gt;_</span></button>
+  <button class="dock-item" data-dock="settings" data-tip="Settings"><span class="dock-icon app-icon settings-app">⚙</span></button>
+  <span class="dock-sep"></span>
+  <div class="minimized-area" id="minimizedArea"></div>
+  <span class="dock-sep"></span>
+  <button class="dock-item" data-dock="trash" data-tip="Trash"><span class="dock-icon app-icon trash-app">⌫</span></button>
+</nav></div>
+
+<dialog class="dialog" id="dialog"><div class="dialog-head" id="dialogTitle">Net Desktop</div><div class="dialog-body" id="dialogBody"></div></dialog>
+<div class="toast" id="toast"></div>
+
+<!-- Login screen (shown until the learner signs in) -->
+<div class="login-screen" id="loginScreen">
+  <form class="login-card" id="loginForm" autocomplete="on">
+    <div class="login-mascot"></div>
+    <h1>CAI Net</h1>
+    <p class="login-sub">ห้องทดลองจำลองเครือข่ายในห้องเรียน</p>
+    <div class="login-status" id="loginStatus">กำลังเชื่อมต่อเซิร์ฟเวอร์…</div>
+    <div class="login-fields" id="loginFields" hidden>
+      <label for="loginId">รหัสนักเรียน</label>
+      <input id="loginId" name="studentId" maxlength="20" required pattern="[A-Za-z0-9._\-]{1,20}" placeholder="เช่น 65001" autocomplete="username">
+      <label for="loginName">ชื่อ-นามสกุล</label>
+      <input id="loginName" name="name" maxlength="80" required minlength="2" placeholder="เช่น สมชาย ใจดี" autocomplete="name">
+      <button type="submit" id="loginBtn">เข้าสู่ระบบ</button>
+      <a class="teacher-link" href="teacher.html">สำหรับครูผู้สอน →</a>
+    </div>
+  </form>
+</div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/cai.js"></script>
+</body>
+</html>

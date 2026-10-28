@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CAI Net — หน้าครูผู้สอน</title>
+<link rel="icon" href="assets/cai-assistant-mascot-v3.png">
+<link rel="stylesheet" href="css/teacher.css">
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><span class="logo"></span>CAI Net <small>สำหรับครูผู้สอน</small></div>
+  <div class="bar-actions" id="barActions" hidden>
+    <button id="refreshBtn">↻ รีเฟรช</button>
+    <a class="btn" href="/api/teacher/export.csv" id="csvBtn">⬇ Export CSV (Excel)</a>
+    <button id="logoutBtn">ออกจากระบบ</button>
+  </div>
+</header>
+
+<main>
+  <section class="card login" id="loginCard" hidden>
+    <h1>เข้าสู่ระบบครูผู้สอน</h1>
+    <form id="teacherForm">
+      <label for="tPass">รหัสผ่านครู</label>
+      <input id="tPass" type="password" required autocomplete="current-password">
+      <button type="submit">เข้าสู่ระบบ</button>
+      <p class="error" id="loginError"></p>
+    </form>
+    <a href="/">← กลับไปหน้าผู้เรียน</a>
+  </section>
+
+  <div id="report" hidden>
+    <section class="kpis" id="kpis"></section>
+
+    <section class="card">
+      <h2>ผลการเรียนรายบุคคล</h2>
+      <div class="table-wrap"><table id="studentTable"></table></div>
+      <p class="note" id="studentNote"></p>
+    </section>
+
+    <div class="grid2">
+      <section class="card">
+        <h2>ความพึงพอใจของผู้เรียน</h2>
+        <div class="table-wrap"><table id="surveyTable"></table></div>
+        <div id="comments"></div>
+      </section>
+      <section class="card">
+        <h2>จุดที่ผู้เรียนทำผิดบ่อย</h2>
+        <div id="mistakes"></div>
+        <h2 class="mt">วิธีคำนวณ</h2>
+        <ul class="note">
+          <li><b>E1</b> (ประสิทธิภาพของกระบวนการ) = ค่าเฉลี่ยร้อยละของคะแนนระหว่างเรียน (คะแนนภารกิจ 4 ภารกิจ + คำถามหลังภารกิจ 4 ชุด) ของผู้เรียนที่ทำแบบทดสอบหลังเรียนแล้ว</li>
+          <li><b>E2</b> (ประสิทธิภาพของผลลัพธ์) = ค่าเฉลี่ยร้อยละของคะแนนแบบทดสอบหลังเรียน</li>
+          <li>เกณฑ์ที่นิยมใช้คือ 80/80</li>
+          <li>คะแนนภารกิจ = 100 − 10 × (จำนวนครั้งที่ตรวจไม่ผ่าน, สูงสุด 40) − 5 × (จำนวนคำใบ้, สูงสุด 30) ขั้นต่ำ 40</li>
+          <li>ความพึงพอใจใช้ค่าเฉลี่ย (x̄) และส่วนเบี่ยงเบนมาตรฐาน (S.D.) แปลผล 4.51–5.00 มากที่สุด, 3.51–4.50 มาก, 2.51–3.50 ปานกลาง, 1.51–2.50 น้อย, 1.00–1.50 น้อยที่สุด</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="js/teacher.js"></script>
+</body>
+</html>
