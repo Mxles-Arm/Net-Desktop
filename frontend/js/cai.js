@@ -76,6 +76,7 @@
       showServerDown(e.message);
     }
   }
+  $("#loginId").addEventListener("input", (e) => ($("#idWarn").hidden = !/[฀-๿]/.test(e.target.value)));
   $("#loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = $("#loginBtn");

@@ -61,6 +61,8 @@
   cursor: pointer;
 }
 .login-fields button:disabled { opacity: 0.6; }
+.kb-warn { margin: 6px 0 0; padding: 6px 8px; border-radius: 6px; background: #fdf3dc; color: #7d5b0f; font-size: 12px; line-height: 1.5; }
+.kb-warn[hidden] { display: none; }
 .teacher-link { display: block; margin-top: 12px; text-align: center; font-size: 12px; color: #2463a6; }
 
 /* ---------- Menu bar user ---------- */

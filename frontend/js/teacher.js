@@ -97,6 +97,21 @@
       : '<p class="empty">ยังไม่มีข้อมูล</p>';
   }
 
+  // The password is hidden as dots, so warn when the Thai layout or Caps Lock is on.
+  const warnKeyboard = (e) => {
+    const thai = /[฀-๿]/.test($("#tPass").value);
+    const caps = e.getModifierState?.("CapsLock");
+    const msg = thai
+      ? "⚠ แป้นพิมพ์เป็นภาษาไทยอยู่ — กดปุ่ม ~ หรือ Alt + Shift เพื่อเปลี่ยนเป็น ENG แล้วพิมพ์รหัสใหม่"
+      : caps
+        ? "⚠ เปิด Caps Lock อยู่ — รหัสผ่านแยกตัวพิมพ์เล็กกับตัวพิมพ์ใหญ่"
+        : "";
+    $("#kbWarn").textContent = msg;
+    $("#kbWarn").hidden = !msg;
+  };
+  $("#tPass").addEventListener("input", warnKeyboard);
+  $("#tPass").addEventListener("keyup", warnKeyboard);
+
   $("#teacherForm").onsubmit = async (e) => {
     e.preventDefault();
     try {

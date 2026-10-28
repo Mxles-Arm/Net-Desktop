@@ -78,6 +78,7 @@
     <div class="login-fields" id="loginFields" hidden>
       <label for="loginId">รหัสนักเรียน</label>
       <input id="loginId" name="studentId" maxlength="20" required pattern="[A-Za-z0-9._\-]{1,20}" placeholder="เช่น 65001" autocomplete="username">
+      <p class="kb-warn" id="idWarn" hidden>⚠ แป้นพิมพ์เป็นภาษาไทยอยู่ — รหัสนักเรียนใช้ตัวเลขหรือภาษาอังกฤษ กดปุ่ม ~ หรือ Alt + Shift เพื่อเปลี่ยนเป็น ENG</p>
       <label for="loginName">ชื่อ-นามสกุล</label>
       <input id="loginName" name="name" maxlength="80" required minlength="2" placeholder="เช่น สมชาย ใจดี" autocomplete="name">
       <button type="submit" id="loginBtn">เข้าสู่ระบบ</button>
