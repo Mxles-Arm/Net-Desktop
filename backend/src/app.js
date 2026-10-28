@@ -51,67 +51,70 @@ function workspaceInput(body) {
   return ws;
 }
 
-function createApp(db, options = {}) {
+async function createApp(db, options = {}) {
   const teacherPassword = options.teacherPassword || process.env.TEACHER_PASSWORD || 'teacher1234';
   const app = express();
   app.disable('x-powered-by');
+  // Render and similar hosts sit behind a proxy that terminates HTTPS.
+  app.set('trust proxy', 1);
   app.use(express.json({ limit: '2mb' }));
 
   // Reserved teacher account.
-  db.prepare("INSERT OR IGNORE INTO users (student_id, name, role) VALUES ('teacher', 'ครูผู้สอน', 'teacher')").run();
+  await db.run("INSERT OR IGNORE INTO users (student_id, name, role) VALUES ('teacher', 'ครูผู้สอน', 'teacher')");
 
   // ----- Session handling -----
-  const startSession = (res, userId) => {
+  const startSession = async (req, res, userId) => {
     const token = crypto.randomBytes(32).toString('hex');
-    db.prepare(`INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, datetime('now', '+${SESSION_DAYS} days'))`).run(token, userId);
-    db.prepare("UPDATE users SET last_login = datetime('now') WHERE id = ?").run(userId);
-    res.setHeader('Set-Cookie', `${COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_DAYS * 86400}`);
+    await db.run(`INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, datetime('now', '+${SESSION_DAYS} days'))`, token, userId);
+    await db.run("UPDATE users SET last_login = datetime('now') WHERE id = ?", userId);
+    const secure = req.secure ? '; Secure' : '';
+    res.setHeader('Set-Cookie', `${COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_DAYS * 86400}${secure}`);
   };
 
-  app.use((req, _res, next) => {
+  app.use(h(async (req, _res, next) => {
     const token = readCookie(req, COOKIE);
     req.user = token
-      ? db.prepare(`SELECT u.id, u.student_id AS studentId, u.name, u.role FROM sessions s JOIN users u ON u.id = s.user_id
-                    WHERE s.token = ? AND s.expires_at > datetime('now')`).get(token) || null
+      ? (await db.get(`SELECT u.id, u.student_id AS studentId, u.name, u.role FROM sessions s JOIN users u ON u.id = s.user_id
+                       WHERE s.token = ? AND s.expires_at > datetime('now')`, token)) || null
       : null;
     req.token = token;
     next();
-  });
+  }));
   const auth = (req, _res, next) => (req.user ? next() : next(new HttpError(401, 'กรุณาเข้าสู่ระบบก่อน')));
   const teacherOnly = (req, _res, next) => (req.user?.role === 'teacher' ? next() : next(new HttpError(403, 'สำหรับครูผู้สอนเท่านั้น')));
 
   // ----- Auth -----
-  app.post('/api/auth/student', h((req, res) => {
+  app.post('/api/auth/student', h(async (req, res) => {
     const studentId = String(req.body?.studentId || '').trim();
     const name = String(req.body?.name || '').trim().replace(/\s+/g, ' ');
     if (!STUDENT_ID_RE.test(studentId)) fail(400, 'รหัสนักเรียนต้องเป็นตัวอักษรอังกฤษหรือตัวเลข 1–20 ตัว');
     if (studentId.toLowerCase() === 'teacher') fail(400, 'รหัสนี้สงวนไว้สำหรับครู');
     if (name.length < 2 || name.length > 80) fail(400, 'กรุณากรอกชื่อ-นามสกุล (2–80 ตัวอักษร)');
-    let user = db.prepare('SELECT id, role FROM users WHERE student_id = ?').get(studentId);
-    if (user) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name, user.id);
-    else user = { id: db.prepare('INSERT INTO users (student_id, name) VALUES (?, ?)').run(studentId, name).lastInsertRowid };
-    startSession(res, user.id);
+    let user = await db.get('SELECT id, role FROM users WHERE student_id = ?', studentId);
+    if (user) await db.run('UPDATE users SET name = ? WHERE id = ?', name, user.id);
+    else user = { id: (await db.run('INSERT INTO users (student_id, name) VALUES (?, ?)', studentId, name)).lastInsertRowid };
+    await startSession(req, res, user.id);
     res.json({ user: { id: Number(user.id), studentId, name, role: 'student' } });
   }));
 
-  app.post('/api/auth/teacher', h((req, res) => {
+  app.post('/api/auth/teacher', h(async (req, res) => {
     if (!safeEqual(req.body?.password || '', teacherPassword)) fail(401, 'รหัสผ่านไม่ถูกต้อง');
-    const t = db.prepare("SELECT id, student_id AS studentId, name, role FROM users WHERE student_id = 'teacher'").get();
-    startSession(res, t.id);
+    const t = await db.get("SELECT id, student_id AS studentId, name, role FROM users WHERE student_id = 'teacher'");
+    await startSession(req, res, t.id);
     res.json({ user: t });
   }));
 
-  app.post('/api/auth/logout', (req, res) => {
-    if (req.token) db.prepare('DELETE FROM sessions WHERE token = ?').run(req.token);
+  app.post('/api/auth/logout', h(async (req, res) => {
+    if (req.token) await db.run('DELETE FROM sessions WHERE token = ?', req.token);
     res.setHeader('Set-Cookie', `${COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`);
     res.json({ ok: true });
-  });
+  }));
 
   app.get('/api/me', (req, res) => res.json({ user: req.user }));
 
   // ----- Workspaces -----
-  const ownWorkspace = (req) => {
-    const row = db.prepare('SELECT * FROM workspaces WHERE id = ? AND user_id = ?').get(Number(req.params.id), req.user.id);
+  const ownWorkspace = async (req) => {
+    const row = await db.get('SELECT * FROM workspaces WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
     if (!row) fail(404, 'ไม่พบ Workspace นี้');
     return row;
   };
@@ -128,28 +131,28 @@ function createApp(db, options = {}) {
     return json;
   };
 
-  app.get('/api/workspaces', auth, (req, res) => {
-    const rows = db.prepare('SELECT id, name, mission_id, created_at, updated_at FROM workspaces WHERE user_id = ? ORDER BY updated_at DESC').all(req.user.id);
+  app.get('/api/workspaces', auth, h(async (req, res) => {
+    const rows = await db.all('SELECT id, name, mission_id, created_at, updated_at FROM workspaces WHERE user_id = ? ORDER BY updated_at DESC', req.user.id);
     res.json({ workspaces: rows.map((r) => wsOut(r, false)) });
-  });
-  app.post('/api/workspaces', auth, h((req, res) => {
-    const count = db.prepare('SELECT COUNT(*) AS n FROM workspaces WHERE user_id = ?').get(req.user.id).n;
+  }));
+  app.post('/api/workspaces', auth, h(async (req, res) => {
+    const count = (await db.get('SELECT COUNT(*) AS n FROM workspaces WHERE user_id = ?', req.user.id)).n;
     if (count >= MAX_WORKSPACES) fail(400, `บันทึกได้สูงสุด ${MAX_WORKSPACES} Workspace กรุณาลบงานเก่าก่อน`);
     const name = String(req.body?.name || 'Workspace').trim().slice(0, 80) || 'Workspace';
     const missionId = req.body?.missionId && missions.byId(req.body.missionId) ? req.body.missionId : null;
-    const info = db.prepare('INSERT INTO workspaces (user_id, name, data, mission_id) VALUES (?, ?, ?, ?)').run(req.user.id, name, cleanData(req.body?.data), missionId);
-    res.status(201).json({ workspace: wsOut(db.prepare('SELECT * FROM workspaces WHERE id = ?').get(info.lastInsertRowid)) });
+    const info = await db.run('INSERT INTO workspaces (user_id, name, data, mission_id) VALUES (?, ?, ?, ?)', req.user.id, name, cleanData(req.body?.data), missionId);
+    res.status(201).json({ workspace: wsOut(await db.get('SELECT * FROM workspaces WHERE id = ?', info.lastInsertRowid)) });
   }));
-  app.get('/api/workspaces/:id', auth, h((req, res) => res.json({ workspace: wsOut(ownWorkspace(req)) })));
-  app.put('/api/workspaces/:id', auth, h((req, res) => {
-    const row = ownWorkspace(req);
+  app.get('/api/workspaces/:id', auth, h(async (req, res) => res.json({ workspace: wsOut(await ownWorkspace(req)) })));
+  app.put('/api/workspaces/:id', auth, h(async (req, res) => {
+    const row = await ownWorkspace(req);
     const name = req.body?.name !== undefined ? String(req.body.name).trim().slice(0, 80) || row.name : row.name;
     const data = req.body?.data !== undefined ? cleanData(req.body.data) : row.data;
-    db.prepare("UPDATE workspaces SET name = ?, data = ?, updated_at = datetime('now') WHERE id = ?").run(name, data, row.id);
-    res.json({ workspace: wsOut(db.prepare('SELECT * FROM workspaces WHERE id = ?').get(row.id)) });
+    await db.run("UPDATE workspaces SET name = ?, data = ?, updated_at = datetime('now') WHERE id = ?", name, data, row.id);
+    res.json({ workspace: wsOut(await db.get('SELECT * FROM workspaces WHERE id = ?', row.id)) });
   }));
-  app.delete('/api/workspaces/:id', auth, h((req, res) => {
-    db.prepare('DELETE FROM workspaces WHERE id = ?').run(ownWorkspace(req).id);
+  app.delete('/api/workspaces/:id', auth, h(async (req, res) => {
+    await db.run('DELETE FROM workspaces WHERE id = ?', (await ownWorkspace(req)).id);
     res.json({ ok: true });
   }));
 
@@ -172,17 +175,17 @@ function createApp(db, options = {}) {
   }));
 
   // ----- CAI Assistant (rule-based, 3 hint levels) -----
-  const ownAttempt = (userId, attemptId, missionId) => {
+  const ownAttempt = async (userId, attemptId, missionId) => {
     if (!attemptId) return null;
-    const a = db.prepare('SELECT * FROM mission_attempts WHERE id = ? AND user_id = ?').get(Number(attemptId), userId);
+    const a = await db.get('SELECT * FROM mission_attempts WHERE id = ? AND user_id = ?', Number(attemptId), userId);
     if (!a || (missionId && a.mission_id !== missionId)) fail(404, 'ไม่พบการทำภารกิจนี้');
     return a;
   };
-  app.post('/api/assistant/hint', auth, h((req, res) => {
+  app.post('/api/assistant/hint', auth, h(async (req, res) => {
     const ws = workspaceInput(req.body);
     const level = Math.min(Math.max(parseInt(req.body.level, 10) || 1, 1), 3);
     const analysis = engine.analyze(ws);
-    const attempt = ownAttempt(req.user.id, req.body.attemptId);
+    const attempt = await ownAttempt(req.user.id, req.body.attemptId);
     let target = analysis.issues[0];
     let text;
     if (target) {
@@ -196,7 +199,7 @@ function createApp(db, options = {}) {
         text = ['เครือข่ายยังไม่มีข้อผิดพลาด แต่ภารกิจยังไม่ครบ', `เงื่อนไขที่ยังไม่ผ่าน: ${unmet.label}`, `ทำให้ครบเงื่อนไข "${unmet.label}" แล้วกด "ตรวจภารกิจ" อีกครั้ง`][level - 1];
       }
     }
-    if (attempt && target && !attempt.passed) db.prepare('UPDATE mission_attempts SET hints = hints + 1 WHERE id = ?').run(attempt.id);
+    if (attempt && target && !attempt.passed) await db.run('UPDATE mission_attempts SET hints = hints + 1 WHERE id = ?', attempt.id);
     res.json({
       level,
       hasProblem: !!target,
@@ -208,9 +211,9 @@ function createApp(db, options = {}) {
   }));
 
   // ----- Missions -----
-  const progressFor = (userId) => {
-    const rows = db.prepare(`SELECT mission_id, COUNT(*) AS attempts, MAX(passed) AS passed, MAX(score) AS best
-                             FROM mission_attempts WHERE user_id = ? GROUP BY mission_id`).all(userId);
+  const progressFor = async (userId) => {
+    const rows = await db.all(`SELECT mission_id, COUNT(*) AS attempts, MAX(passed) AS passed, MAX(score) AS best
+                               FROM mission_attempts WHERE user_id = ? GROUP BY mission_id`, userId);
     return new Map(rows.map((r) => [r.mission_id, r]));
   };
   // Missions open in order: mission N needs mission N−1 passed.
@@ -219,11 +222,11 @@ function createApp(db, options = {}) {
     const prev = previousMission(m);
     return !prev || !!prog.get(prev.id)?.passed;
   };
-  const lessonsRead = (userId) => new Set(db.prepare('SELECT lesson_id FROM lesson_reads WHERE user_id = ?').all(userId).map((r) => r.lesson_id));
+  const lessonsRead = async (userId) => new Set((await db.all('SELECT lesson_id FROM lesson_reads WHERE user_id = ?', userId)).map((r) => r.lesson_id));
 
-  app.get('/api/missions', auth, (req, res) => {
-    const prog = progressFor(req.user.id);
-    const read = lessonsRead(req.user.id);
+  app.get('/api/missions', auth, h(async (req, res) => {
+    const prog = await progressFor(req.user.id);
+    const read = await lessonsRead(req.user.id);
     res.json({
       missions: missions.MISSIONS.map((m) => {
         const p = prog.get(m.id);
@@ -235,16 +238,16 @@ function createApp(db, options = {}) {
         };
       }),
     });
-  });
-  app.post('/api/missions/:id/start', auth, h((req, res) => {
+  }));
+  app.post('/api/missions/:id/start', auth, h(async (req, res) => {
     const m = missions.byId(req.params.id) || fail(404, 'ไม่พบภารกิจนี้');
-    if (!isUnlocked(m, progressFor(req.user.id))) fail(403, `ต้องผ่านภารกิจที่ ${m.order - 1} ก่อน จึงจะเริ่มภารกิจนี้ได้`);
-    const attemptId = Number(db.prepare('INSERT INTO mission_attempts (user_id, mission_id) VALUES (?, ?)').run(req.user.id, m.id).lastInsertRowid);
+    if (!isUnlocked(m, await progressFor(req.user.id))) fail(403, `ต้องผ่านภารกิจที่ ${m.order - 1} ก่อน จึงจะเริ่มภารกิจนี้ได้`);
+    const attemptId = (await db.run('INSERT INTO mission_attempts (user_id, mission_id) VALUES (?, ?)', req.user.id, m.id)).lastInsertRowid;
     res.status(201).json({ attemptId, mission: missions.publicMission(m), template: structuredClone(m.template) });
   }));
-  app.post('/api/missions/:id/check', auth, h((req, res) => {
+  app.post('/api/missions/:id/check', auth, h(async (req, res) => {
     const m = missions.byId(req.params.id) || fail(404, 'ไม่พบภารกิจนี้');
-    const attempt = ownAttempt(req.user.id, req.body?.attemptId, m.id) || fail(400, 'ต้องเริ่มภารกิจก่อน (attemptId)');
+    const attempt = (await ownAttempt(req.user.id, req.body?.attemptId, m.id)) || fail(400, 'ต้องเริ่มภารกิจก่อน (attemptId)');
     const result = missions.runChecks(m, workspaceInput(req.body));
     let { score, passed } = attempt;
     const mistakes = JSON.parse(attempt.mistakes);
@@ -254,12 +257,12 @@ function createApp(db, options = {}) {
       if (result.passed) {
         score = missionScore(attempt.checks, attempt.hints);
         passed = 1;
-        db.prepare("UPDATE mission_attempts SET checks = checks + 1, passed = 1, score = ?, finished_at = datetime('now'), mistakes = ? WHERE id = ?").run(score, JSON.stringify(mistakes), attempt.id);
+        await db.run("UPDATE mission_attempts SET checks = checks + 1, passed = 1, score = ?, finished_at = datetime('now'), mistakes = ? WHERE id = ?", score, JSON.stringify(mistakes), attempt.id);
       } else {
-        db.prepare('UPDATE mission_attempts SET checks = checks + 1, mistakes = ? WHERE id = ?').run(JSON.stringify(mistakes), attempt.id);
+        await db.run('UPDATE mission_attempts SET checks = checks + 1, mistakes = ? WHERE id = ?', JSON.stringify(mistakes), attempt.id);
       }
     }
-    const fresh = db.prepare('SELECT checks, hints, started_at, finished_at FROM mission_attempts WHERE id = ?').get(attempt.id);
+    const fresh = await db.get('SELECT checks, hints, started_at, finished_at FROM mission_attempts WHERE id = ?', attempt.id);
     res.json({
       passed: result.passed, results: result.results,
       issues: result.analysis.issues.map((i) => ({ code: i.code, severity: i.severity, message: i.message, deviceIds: i.deviceIds })),
@@ -269,27 +272,27 @@ function createApp(db, options = {}) {
   }));
 
   // ----- Lessons -----
-  app.get('/api/lessons', auth, (req, res) => {
-    const read = lessonsRead(req.user.id);
+  app.get('/api/lessons', auth, h(async (req, res) => {
+    const read = await lessonsRead(req.user.id);
     res.json({ lessons: lessons.LESSONS.map((l) => ({ ...lessons.summary(l), read: read.has(l.id) })) });
-  });
-  app.get('/api/lessons/:id', auth, h((req, res) => {
-    const l = lessons.byId(req.params.id) || fail(404, 'ไม่พบบทเรียนนี้');
-    res.json({ lesson: l, read: lessonsRead(req.user.id).has(l.id) });
   }));
-  app.post('/api/lessons/:id/read', auth, h((req, res) => {
+  app.get('/api/lessons/:id', auth, h(async (req, res) => {
     const l = lessons.byId(req.params.id) || fail(404, 'ไม่พบบทเรียนนี้');
-    db.prepare('INSERT OR IGNORE INTO lesson_reads (user_id, lesson_id) VALUES (?, ?)').run(req.user.id, l.id);
+    res.json({ lesson: l, read: (await lessonsRead(req.user.id)).has(l.id) });
+  }));
+  app.post('/api/lessons/:id/read', auth, h(async (req, res) => {
+    const l = lessons.byId(req.params.id) || fail(404, 'ไม่พบบทเรียนนี้');
+    await db.run('INSERT OR IGNORE INTO lesson_reads (user_id, lesson_id) VALUES (?, ?)', req.user.id, l.id);
     res.json({ ok: true });
   }));
 
   // ----- Quizzes -----
-  app.get('/api/quizzes/:id', auth, h((req, res) => {
+  app.get('/api/quizzes/:id', auth, h(async (req, res) => {
     const quiz = QUIZZES[req.params.id] || fail(404, 'ไม่พบแบบทดสอบนี้');
-    const last = db.prepare('SELECT score, total, created_at FROM quiz_results WHERE user_id = ? AND quiz_id = ? ORDER BY id DESC LIMIT 1').get(req.user.id, quiz.id);
+    const last = await db.get('SELECT score, total, created_at FROM quiz_results WHERE user_id = ? AND quiz_id = ? ORDER BY id DESC LIMIT 1', req.user.id, quiz.id);
     res.json({ quiz: publicQuiz(quiz), lastResult: last || null });
   }));
-  app.post('/api/quizzes/:id/submit', auth, h((req, res) => {
+  app.post('/api/quizzes/:id/submit', auth, h(async (req, res) => {
     const quiz = QUIZZES[req.params.id] || fail(404, 'ไม่พบแบบทดสอบนี้');
     const answers = req.body?.answers && typeof req.body.answers === 'object' ? req.body.answers : fail(400, 'ต้องส่งคำตอบ (answers)');
     const results = quiz.questions.map((q) => {
@@ -298,50 +301,57 @@ function createApp(db, options = {}) {
     });
     const score = results.filter((r) => r.correct).length;
     const seconds = Number.isFinite(req.body.seconds) ? Math.max(0, Math.round(req.body.seconds)) : null;
-    db.prepare('INSERT INTO quiz_results (user_id, quiz_id, score, total, answers, seconds) VALUES (?, ?, ?, ?, ?, ?)')
-      .run(req.user.id, quiz.id, score, results.length, JSON.stringify(results.map((r) => [r.id, r.chosen])), seconds);
+    await db.run('INSERT INTO quiz_results (user_id, quiz_id, score, total, answers, seconds) VALUES (?, ?, ?, ?, ?, ?)',
+      req.user.id, quiz.id, score, results.length, JSON.stringify(results.map((r) => [r.id, r.chosen])), seconds);
     res.json({ score, total: results.length, percent: Math.round((score / results.length) * 100), results });
   }));
 
   // ----- Survey -----
-  app.get('/api/survey', auth, (req, res) => {
-    const done = !!db.prepare('SELECT 1 FROM survey_responses WHERE user_id = ?').get(req.user.id);
+  app.get('/api/survey', auth, h(async (req, res) => {
+    const done = !!(await db.get('SELECT 1 FROM survey_responses WHERE user_id = ?', req.user.id));
     res.json({ survey: SURVEY, done });
-  });
-  app.post('/api/survey', auth, h((req, res) => {
+  }));
+  app.post('/api/survey', auth, h(async (req, res) => {
     const answers = Array.isArray(req.body?.answers) ? req.body.answers : fail(400, 'ต้องส่งคำตอบ (answers)');
     if (answers.length !== SURVEY.items.length || !answers.every((a) => Number.isInteger(a) && a >= 1 && a <= 5)) fail(400, 'กรุณาตอบให้ครบทุกข้อ (1–5)');
     const comment = String(req.body.comment || '').trim().slice(0, 1000);
-    db.prepare(`INSERT INTO survey_responses (user_id, answers, comment) VALUES (?, ?, ?)
-                ON CONFLICT(user_id) DO UPDATE SET answers = excluded.answers, comment = excluded.comment, created_at = datetime('now')`)
-      .run(req.user.id, JSON.stringify(answers), comment);
+    await db.run(`INSERT INTO survey_responses (user_id, answers, comment) VALUES (?, ?, ?)
+                  ON CONFLICT(user_id) DO UPDATE SET answers = excluded.answers, comment = excluded.comment, created_at = datetime('now')`,
+    req.user.id, JSON.stringify(answers), comment);
     res.json({ ok: true });
   }));
 
   // ----- Learner progress (for the desktop) -----
-  app.get('/api/progress', auth, (req, res) => {
-    const done = (id) => !!db.prepare('SELECT 1 FROM quiz_results WHERE user_id = ? AND quiz_id = ?').get(req.user.id, id);
-    const prog = progressFor(req.user.id);
+  app.get('/api/progress', auth, h(async (req, res) => {
+    const done = async (id) => !!(await db.get('SELECT 1 FROM quiz_results WHERE user_id = ? AND quiz_id = ?', req.user.id, id));
+    const prog = await progressFor(req.user.id);
     res.json({
-      pretest: done('pretest'), posttest: done('posttest'),
-      survey: !!db.prepare('SELECT 1 FROM survey_responses WHERE user_id = ?').get(req.user.id),
+      pretest: await done('pretest'), posttest: await done('posttest'),
+      survey: !!(await db.get('SELECT 1 FROM survey_responses WHERE user_id = ?', req.user.id)),
       missionsPassed: missions.MISSIONS.filter((m) => prog.get(m.id)?.passed).length,
       missionsTotal: missions.MISSIONS.length,
-      lessonsRead: lessonsRead(req.user.id).size,
+      lessonsRead: (await lessonsRead(req.user.id)).size,
       lessonsTotal: lessons.LESSONS.length,
     });
-  });
+  }));
 
   // ----- Teacher -----
-  app.get('/api/teacher/summary', auth, teacherOnly, (req, res) => res.json(stats.summary(db)));
-  app.get('/api/teacher/export.csv', auth, teacherOnly, (req, res) => {
+  app.get('/api/teacher/summary', auth, teacherOnly, h(async (req, res) => res.json(await stats.summary(db))));
+  app.get('/api/teacher/export.csv', auth, teacherOnly, h(async (req, res) => {
+    const body = await stats.csv(db);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="cai-net-results.csv"');
-    res.send('﻿' + stats.csv(db));
-  });
-  app.delete('/api/teacher/students/:id', auth, teacherOnly, h((req, res) => {
-    const info = db.prepare("DELETE FROM users WHERE id = ? AND role = 'student'").run(Number(req.params.id));
-    if (!info.changes) fail(404, 'ไม่พบนักเรียนคนนี้');
+    res.send('﻿' + body);
+  }));
+  app.delete('/api/teacher/students/:id', auth, teacherOnly, h(async (req, res) => {
+    const id = Number(req.params.id);
+    const student = await db.get("SELECT id FROM users WHERE id = ? AND role = 'student'", id);
+    if (!student) fail(404, 'ไม่พบนักเรียนคนนี้');
+    // Delete related rows explicitly: foreign-key cascades are not guaranteed on every libSQL connection.
+    for (const table of ['sessions', 'workspaces', 'mission_attempts', 'quiz_results', 'survey_responses', 'lesson_reads']) {
+      await db.run(`DELETE FROM ${table} WHERE user_id = ?`, id);
+    }
+    await db.run('DELETE FROM users WHERE id = ?', id);
     res.json({ ok: true });
   }));
 

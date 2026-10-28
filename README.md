@@ -6,7 +6,7 @@
 
 ## วิธีรัน
 
-ต้องมี [Node.js](https://nodejs.org) เวอร์ชัน 18 ขึ้นไป (ไม่มีค่าใช้จ่ายใด ๆ)
+ต้องมี [Node.js](https://nodejs.org) (ทดสอบแล้วกับเวอร์ชัน 20, 22 และ 24 — แนะนำ 24 เพราะ 20 หมดระยะซัพพอร์ตแล้ว) ไม่มีค่าใช้จ่ายใด ๆ
 
 ```bash
 npm run setup     # ติดตั้งครั้งแรกครั้งเดียว (ต้องต่ออินเทอร์เน็ต)
@@ -22,7 +22,13 @@ npm start         # เปิดเซิร์ฟเวอร์
 - ทดสอบระบบหลังบ้าน: `npm test`
 - เบราว์เซอร์หนึ่งตัวล็อกอินได้ทีละบัญชี ถ้าจะเปิดหน้าครูกับหน้าผู้เรียนพร้อมกัน ให้ใช้หน้าต่างไม่ระบุตัวตน (Incognito) แยกกัน
 
-ข้อมูลทั้งหมดเก็บในไฟล์ `backend/data/cai-net.db` (SQLite) ถ้าจะเริ่มเก็บข้อมูลใหม่ (เช่น ก่อนทดลองกับกลุ่มตัวอย่างจริง) ให้ปิดเซิร์ฟเวอร์แล้วลบโฟลเดอร์ `backend/data`
+### เอาขึ้น Host
+
+ดูคู่มือทีละขั้นที่ [docs/DEPLOY.md](docs/DEPLOY.md) (Render + Turso ฟรี) — ถ้าตั้งตัวแปร `TURSO_DATABASE_URL` และ `TURSO_AUTH_TOKEN` ระบบจะเก็บข้อมูลบน Turso แทนไฟล์ในเครื่อง
+
+### ฐานข้อมูลบนเครื่อง
+
+ถ้ารันบนเครื่องตัวเอง ข้อมูลทั้งหมดเก็บในไฟล์ `backend/data/cai-net.db` (SQLite) ถ้าจะเริ่มเก็บข้อมูลใหม่ (เช่น ก่อนทดลองกับกลุ่มตัวอย่างจริง) ให้ปิดเซิร์ฟเวอร์แล้วลบโฟลเดอร์ `backend/data`
 
 ## โครงสร้างโปรเจกต์
 
@@ -37,14 +43,16 @@ frontend/            หน้าบ้าน (HTML/CSS/JS ล้วน ไม�
   js/cai.js          ฟีเจอร์ที่ต่อกับหลังบ้าน (ล็อกอิน บันทึก ภารกิจ คำใบ้ Network Utility Terminal)
   js/teacher.js      หน้าครู
   assets/            รูปภาพ
-backend/             หลังบ้าน (Node.js + Express + SQLite)
+backend/             หลังบ้าน (Node.js + Express + SQLite ผ่าน libSQL — ไฟล์ในเครื่องหรือ Turso)
   src/server.js      จุดเริ่มเซิร์ฟเวอร์
   src/app.js         API ทั้งหมด
   src/engine/        Network Engine — จำลอง IP, Subnet, Gateway, DHCP, DNS, Wi-Fi, ping, traceroute, คำสั่ง Terminal
   src/content/       เนื้อหา: บทเรียน ภารกิจ แบบทดสอบ แบบประเมิน (แก้ไขเนื้อหา/ข้อสอบ/ภารกิจได้ที่นี่)
   src/stats.js       คำนวณคะแนน E1/E2 ความพึงพอใจ และไฟล์ CSV
   test/              ชุดทดสอบอัตโนมัติ
+render.yaml          ตั้งค่าสำหรับ deploy ขึ้น Render
 docs/
+  DEPLOY.md          วิธีเอาขึ้น Host ทีละขั้น
   API.md             รายการ API ทั้งหมด
   DATA-FORMAT.md     รูปแบบข้อมูล Workspace (อุปกรณ์ สาย ค่าเครือข่าย)
 ```

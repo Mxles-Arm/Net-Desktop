@@ -1,0 +1,17 @@
+# Render Blueprint — creates the CAI Net web service (free plan).
+# Secrets (sync: false) are asked for once, when the Blueprint is first created in the Render Dashboard.
+# See docs/DEPLOY.md for the step-by-step guide.
+services:
+  - type: web
+    name: cai-net
+    runtime: node
+    plan: free
+    buildCommand: npm run setup
+    startCommand: npm start
+    envVars:
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: TEACHER_PASSWORD
+        sync: false

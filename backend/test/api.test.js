@@ -63,8 +63,8 @@ test('mission score', () => {
 // ---------- HTTP ----------
 
 async function withServer(fn) {
-  const db = open(':memory:');
-  const app = createApp(db, { teacherPassword: 'pw-teacher' });
+  const db = await open(':memory:');
+  const app = await createApp(db, { teacherPassword: 'pw-teacher' });
   const server = await new Promise((r) => { const s = app.listen(0, () => r(s)); });
   const base = `http://127.0.0.1:${server.address().port}`;
   const client = () => {
@@ -236,4 +236,11 @@ test('quizzes, survey and teacher reports', () => withServer(async (client) => {
   assert.match(csv.text, /65001,สมชาย ใจดี,20,80,60/);
   assert.equal((await t('DELETE', `/api/teacher/students/${sum.body.students[0].id}`)).status, 200);
   assert.equal((await t('GET', '/api/teacher/summary')).body.totals.students, 0);
+  assert.equal((await t('DELETE', `/api/teacher/students/${sum.body.students[0].id}`)).status, 404);
+  // The old session is gone and logging in again with the same ID starts from scratch.
+  assert.equal((await a('GET', '/api/progress')).status, 401);
+  await a('POST', '/api/auth/student', { studentId: '65001', name: 'สมชาย ใจดี' });
+  const fresh = (await a('GET', '/api/progress')).body;
+  assert.deepEqual([fresh.pretest, fresh.posttest, fresh.survey, fresh.lessonsRead], [false, false, false, 0]);
+  assert.equal((await t('GET', '/api/teacher/summary')).body.survey.n, 0);
 }));

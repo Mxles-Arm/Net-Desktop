@@ -23,12 +23,12 @@ const sd = (xs) => {
 };
 const level = (m) => (m == null ? '-' : m >= 4.51 ? 'มากที่สุด' : m >= 3.51 ? 'มาก' : m >= 2.51 ? 'ปานกลาง' : m >= 1.51 ? 'น้อย' : 'น้อยที่สุด');
 
-function students(db) {
-  const users = db.prepare("SELECT id, student_id, name, created_at, last_login FROM users WHERE role = 'student' ORDER BY student_id").all();
-  const quizRows = db.prepare('SELECT user_id, quiz_id, score, total, id FROM quiz_results ORDER BY id').all();
-  const attempts = db.prepare('SELECT * FROM mission_attempts').all();
-  const surveys = new Set(db.prepare('SELECT user_id FROM survey_responses').all().map((r) => r.user_id));
-  const reads = db.prepare('SELECT user_id, COUNT(*) AS n FROM lesson_reads GROUP BY user_id').all();
+async function students(db) {
+  const users = await db.all("SELECT id, student_id, name, created_at, last_login FROM users WHERE role = 'student' ORDER BY student_id");
+  const quizRows = await db.all('SELECT user_id, quiz_id, score, total, id FROM quiz_results ORDER BY id');
+  const attempts = await db.all('SELECT * FROM mission_attempts');
+  const surveys = new Set((await db.all('SELECT user_id FROM survey_responses')).map((r) => r.user_id));
+  const reads = await db.all('SELECT user_id, COUNT(*) AS n FROM lesson_reads GROUP BY user_id');
   const readCount = new Map(reads.map((r) => [r.user_id, r.n]));
   const exerciseQuizzes = Object.values(QUIZZES).filter((q) => q.kind === 'exercise').map((q) => q.id);
 
@@ -69,15 +69,15 @@ function students(db) {
   });
 }
 
-function summary(db) {
-  const list = students(db);
+async function summary(db) {
+  const list = await students(db);
   const pre = list.map((s) => s.pretest).filter((x) => x != null);
   const post = list.map((s) => s.posttest).filter((x) => x != null);
   // E1 counts learners who finished the course (took the posttest); falls back to everyone with exercises.
   const finished = list.filter((s) => s.posttest != null && s.exercise != null);
   const e1Pool = (finished.length ? finished : list.filter((s) => s.exercise != null)).map((s) => s.exercise);
 
-  const responses = db.prepare('SELECT answers FROM survey_responses').all().map((r) => JSON.parse(r.answers));
+  const responses = (await db.all('SELECT answers FROM survey_responses')).map((r) => JSON.parse(r.answers));
   const items = SURVEY.items.map((text, i) => {
     const xs = responses.map((a) => a[i]).filter(Number.isFinite);
     const m = mean(xs);
@@ -86,7 +86,7 @@ function summary(db) {
   const all = responses.flat().filter(Number.isFinite);
 
   const mistakes = {};
-  for (const a of db.prepare('SELECT mistakes FROM mission_attempts').all()) {
+  for (const a of await db.all('SELECT mistakes FROM mission_attempts')) {
     for (const [k, v] of Object.entries(JSON.parse(a.mistakes))) {
       if (k.startsWith('issue:')) mistakes[k.slice(6)] = (mistakes[k.slice(6)] || 0) + v;
     }
@@ -104,13 +104,13 @@ function summary(db) {
       posttestMean: round(mean(post), 1), posttestSd: round(sd(post), 1), posttestN: post.length,
       E1: round(mean(e1Pool), 2), E2: round(mean(post), 2), e1N: e1Pool.length,
     },
-    survey: { n: responses.length, items, overallMean: round(mean(all)), overallSd: round(sd(all)), overallLevel: level(mean(all)), comments: db.prepare("SELECT comment FROM survey_responses WHERE comment <> ''").all().map((r) => r.comment) },
+    survey: { n: responses.length, items, overallMean: round(mean(all)), overallSd: round(sd(all)), overallLevel: level(mean(all)), comments: (await db.all("SELECT comment FROM survey_responses WHERE comment <> ''")).map((r) => r.comment) },
     topMistakes,
   };
 }
 
-function csv(db) {
-  const list = students(db);
+async function csv(db) {
+  const list = await students(db);
   const ms = missions.MISSIONS;
   const head = ['รหัสนักเรียน', 'ชื่อ', 'ก่อนเรียน (%)', 'หลังเรียน (%)', 'พัฒนาการ (%)', `อ่านบทเรียน (จาก ${lessons.LESSONS.length})`, ...ms.map((m) => `ภารกิจ: ${m.title}`), 'คะแนนระหว่างเรียน (%)', 'จำนวนคำใบ้', 'จำนวนครั้งที่ตรวจ', 'เวลาทำภารกิจ (นาที)', 'ทำแบบประเมินแล้ว'];
   const cell = (v) => {
