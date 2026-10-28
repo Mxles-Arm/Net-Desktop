@@ -421,8 +421,9 @@
         const r = results.get(c.id);
         return `<li class="${r === true ? "pass" : r === false ? "fail" : ""}">${r === true ? "✓" : r === false ? "✗" : "○"} ${esc(c.label)}</li>`;
       })
-      .join("")}</ul><button class="small-btn mp-brief">📋 ดูโจทย์</button>`;
+      .join("")}</ul><div class="size-row"><button class="small-btn mp-brief">📋 ดูโจทย์</button>${m.lesson ? '<button class="small-btn mp-lesson">📖 บทเรียน</button>' : ""}</div>`;
     panel.querySelector(".mp-brief").onclick = () => showBrief(m);
+    panel.querySelector(".mp-lesson")?.addEventListener("click", () => openLesson(m.lesson.id));
   }
   function showBrief(m) {
     showDialog(
@@ -483,19 +484,62 @@
       return fail(e);
     }
     const step = (done, label, cmd) => `<button class="step ${done ? "done" : ""}" data-cmd2="${cmd}">${done ? "✓" : "○"} ${label}</button>`;
+    const card = (m) => {
+      const status = !m.unlocked
+        ? `🔒 ผ่านภารกิจที่ ${m.order - 1} ก่อน`
+        : m.passed
+          ? `คะแนนสูงสุด ${m.bestScore}`
+          : m.attempts
+            ? `เริ่มแล้ว ${m.attempts} ครั้ง`
+            : "ยังไม่เริ่ม";
+      const lesson = m.lesson
+        ? `<button class="mc-lesson ${m.lesson.read ? "read" : ""}" data-lesson="${esc(m.lesson.id)}">${m.lesson.read ? "✓" : "📖"} บทเรียน: ${esc(m.lesson.title)}</button>`
+        : "";
+      const start = m.unlocked
+        ? `<button data-mission="${m.id}" class="${m.passed ? "" : "primary-btn"}">${m.passed ? "เล่นอีกครั้ง" : m.attempts ? "เริ่มใหม่" : "เริ่มภารกิจ"}</button>`
+        : '<button disabled>🔒 ยังไม่ปลดล็อก</button>';
+      return `<div class="mc-card ${m.passed ? "passed" : ""} ${m.unlocked ? "" : "locked"}"><div class="mc-head"><span class="mc-num">${m.order}</span>${m.medal ? `<span class="mc-medal">${MEDAL[m.medal]}</span>` : ""}</div><b>${esc(m.title)}</b><p>${esc(m.summary)}</p>${lesson}<small>${status}</small>${start}</div>`;
+    };
     showDialog(
       "Mission Control",
-      `<div class="mc-steps">${step(p.pretest, "1. แบบทดสอบก่อนเรียน", "pretest")}${step(p.missionsPassed === p.missionsTotal, `2. ภารกิจ (${p.missionsPassed}/${p.missionsTotal})`, "")}${step(p.posttest, "3. แบบทดสอบหลังเรียน", "posttest")}${step(p.survey, "4. แบบประเมินความพึงพอใจ", "survey")}</div>
-      <div class="mc-grid">${ms
-        .map(
-          (m) =>
-            `<div class="mc-card ${m.passed ? "passed" : ""}"><div class="mc-head"><span class="mc-num">${m.order}</span>${m.medal ? `<span class="mc-medal">${MEDAL[m.medal]}</span>` : ""}</div><b>${esc(m.title)}</b><p>${esc(m.summary)}</p><small>${m.passed ? `คะแนนสูงสุด ${m.bestScore}` : m.attempts ? `เริ่มแล้ว ${m.attempts} ครั้ง` : "ยังไม่เริ่ม"}</small><button data-mission="${m.id}" class="${m.passed ? "" : "primary-btn"}">${m.passed ? "เล่นอีกครั้ง" : m.attempts ? "เริ่มใหม่" : "เริ่มภารกิจ"}</button></div>`,
-        )
-        .join("")}</div>`,
+      `<div class="mc-steps">${step(p.pretest, "1. แบบทดสอบก่อนเรียน", "pretest")}${step(p.missionsPassed === p.missionsTotal, `2. บทเรียน + ภารกิจ (${p.missionsPassed}/${p.missionsTotal})`, "")}${step(p.posttest, "3. แบบทดสอบหลังเรียน", "posttest")}${step(p.survey, "4. แบบประเมินความพึงพอใจ", "survey")}</div>
+      <p class="hint-line">อ่านบทเรียนก่อนเริ่มแต่ละภารกิจ แล้วทำภารกิจตามลำดับ ภารกิจถัดไปจะปลดล็อกเมื่อผ่านภารกิจก่อนหน้า</p>
+      <div class="mc-grid">${ms.map(card).join("")}</div>`,
       { wide: true },
     );
     document.querySelectorAll("[data-mission]").forEach((b) => (b.onclick = () => startMission(b.dataset.mission)));
+    document.querySelectorAll("[data-lesson]").forEach((b) => (b.onclick = () => openLesson(b.dataset.lesson)));
     document.querySelectorAll("[data-cmd2]").forEach((b) => b.dataset.cmd2 && (b.onclick = () => command2(b.dataset.cmd2)));
+  }
+
+  // ================= Lessons =================
+  async function openLesson(id) {
+    let data, ms;
+    try {
+      [data, ms] = await Promise.all([api.lesson(id), loadMissions()]);
+    } catch (e) {
+      return fail(e);
+    }
+    const l = data.lesson;
+    const m = ms.find((x) => x.id === l.mission);
+    const section = (s) =>
+      `<section class="lesson-sec"><h3>${esc(s.h)}</h3>${(s.p || []).map((t) => `<p>${esc(t)}</p>`).join("")}${s.list ? `<ul>${s.list.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}${s.code ? `<pre class="lesson-code">${esc(s.code.join("\n"))}</pre>` : ""}${s.tip ? `<div class="lesson-tip">💡 ${esc(s.tip)}</div>` : ""}</section>`;
+    showDialog(
+      `บทเรียนที่ ${l.order}: ${l.title}`,
+      `<div class="lesson-goal">🎯 เป้าหมาย: ${esc(l.goal)}</div>${l.sections.map(section).join("")}<div class="dialog-actions"><button id="lsClose">ปิด</button> ${m?.unlocked ? `<button id="lsGo" class="primary-btn">อ่านจบแล้ว ไปทำภารกิจที่ ${m.order}</button>` : `<button id="lsDone" class="primary-btn">อ่านจบแล้ว ✓</button>`}</div>`,
+      { wide: true, noClose: true },
+    );
+    $("#dialogBody").scrollTop = 0;
+    const markRead = () => api.markLessonRead(l.id).catch(fail);
+    $("#lsClose").onclick = closeDialog;
+    $("#lsDone")?.addEventListener("click", async () => {
+      await markRead();
+      missionControl();
+    });
+    $("#lsGo")?.addEventListener("click", async () => {
+      await markRead();
+      startMission(l.mission);
+    });
   }
 
   // ================= Quizzes & survey =================
@@ -606,7 +650,7 @@
     }
     showDialog(
       "ความคืบหน้าของฉัน",
-      `<p><b>${esc(user.name)}</b> (${esc(user.studentId)})</p><ul class="progress-list"><li>${p.pretest ? "✓" : "○"} แบบทดสอบก่อนเรียน</li>${ms.map((m) => `<li>${m.passed ? "✓" : "○"} ภารกิจ ${m.order}: ${esc(m.title)} ${m.passed ? `— ${m.bestScore} คะแนน ${MEDAL[m.medal]}` : ""}</li>`).join("")}<li>${p.posttest ? "✓" : "○"} แบบทดสอบหลังเรียน</li><li>${p.survey ? "✓" : "○"} แบบประเมินความพึงพอใจ</li></ul>`,
+      `<p><b>${esc(user.name)}</b> (${esc(user.studentId)})</p><ul class="progress-list"><li>${p.pretest ? "✓" : "○"} แบบทดสอบก่อนเรียน</li><li>${p.lessonsRead === p.lessonsTotal ? "✓" : "○"} อ่านบทเรียน ${p.lessonsRead}/${p.lessonsTotal} บท</li>${ms.map((m) => `<li>${m.passed ? "✓" : m.unlocked ? "○" : "🔒"} ภารกิจ ${m.order}: ${esc(m.title)} ${m.passed ? `— ${m.bestScore} คะแนน ${MEDAL[m.medal]}` : ""}</li>`).join("")}<li>${p.posttest ? "✓" : "○"} แบบทดสอบหลังเรียน</li><li>${p.survey ? "✓" : "○"} แบบประเมินความพึงพอใจ</li></ul>`,
     );
   }
 

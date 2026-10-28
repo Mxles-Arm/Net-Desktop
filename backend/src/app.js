@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const express = require('express');
 const engine = require('./engine/network');
 const missions = require('./content/missions');
+const lessons = require('./content/lessons');
 const { QUIZZES, SURVEY, publicQuiz } = require('./content/quizzes');
 const stats = require('./stats');
 
@@ -212,17 +213,32 @@ function createApp(db, options = {}) {
                              FROM mission_attempts WHERE user_id = ? GROUP BY mission_id`).all(userId);
     return new Map(rows.map((r) => [r.mission_id, r]));
   };
+  // Missions open in order: mission N needs mission N−1 passed.
+  const previousMission = (m) => missions.MISSIONS.find((x) => x.order === m.order - 1);
+  const isUnlocked = (m, prog) => {
+    const prev = previousMission(m);
+    return !prev || !!prog.get(prev.id)?.passed;
+  };
+  const lessonsRead = (userId) => new Set(db.prepare('SELECT lesson_id FROM lesson_reads WHERE user_id = ?').all(userId).map((r) => r.lesson_id));
+
   app.get('/api/missions', auth, (req, res) => {
     const prog = progressFor(req.user.id);
+    const read = lessonsRead(req.user.id);
     res.json({
       missions: missions.MISSIONS.map((m) => {
         const p = prog.get(m.id);
-        return { ...missions.publicMission(m), attempts: p?.attempts || 0, passed: !!p?.passed, bestScore: p?.best ?? null, medal: p?.best != null ? medalFor(p.best) : null };
+        const lesson = lessons.forMission(m.id);
+        return {
+          ...missions.publicMission(m), attempts: p?.attempts || 0, passed: !!p?.passed, bestScore: p?.best ?? null, medal: p?.best != null ? medalFor(p.best) : null,
+          unlocked: isUnlocked(m, prog), requires: previousMission(m)?.id || null,
+          lesson: lesson ? { ...lessons.summary(lesson), read: read.has(lesson.id) } : null,
+        };
       }),
     });
   });
   app.post('/api/missions/:id/start', auth, h((req, res) => {
     const m = missions.byId(req.params.id) || fail(404, 'ไม่พบภารกิจนี้');
+    if (!isUnlocked(m, progressFor(req.user.id))) fail(403, `ต้องผ่านภารกิจที่ ${m.order - 1} ก่อน จึงจะเริ่มภารกิจนี้ได้`);
     const attemptId = Number(db.prepare('INSERT INTO mission_attempts (user_id, mission_id) VALUES (?, ?)').run(req.user.id, m.id).lastInsertRowid);
     res.status(201).json({ attemptId, mission: missions.publicMission(m), template: structuredClone(m.template) });
   }));
@@ -250,6 +266,21 @@ function createApp(db, options = {}) {
       score: passed ? score : null, medal: passed ? medalFor(score) : null,
       checks: fresh.checks, hints: fresh.hints, quiz: m.quiz,
     });
+  }));
+
+  // ----- Lessons -----
+  app.get('/api/lessons', auth, (req, res) => {
+    const read = lessonsRead(req.user.id);
+    res.json({ lessons: lessons.LESSONS.map((l) => ({ ...lessons.summary(l), read: read.has(l.id) })) });
+  });
+  app.get('/api/lessons/:id', auth, h((req, res) => {
+    const l = lessons.byId(req.params.id) || fail(404, 'ไม่พบบทเรียนนี้');
+    res.json({ lesson: l, read: lessonsRead(req.user.id).has(l.id) });
+  }));
+  app.post('/api/lessons/:id/read', auth, h((req, res) => {
+    const l = lessons.byId(req.params.id) || fail(404, 'ไม่พบบทเรียนนี้');
+    db.prepare('INSERT OR IGNORE INTO lesson_reads (user_id, lesson_id) VALUES (?, ?)').run(req.user.id, l.id);
+    res.json({ ok: true });
   }));
 
   // ----- Quizzes -----
@@ -296,6 +327,8 @@ function createApp(db, options = {}) {
       survey: !!db.prepare('SELECT 1 FROM survey_responses WHERE user_id = ?').get(req.user.id),
       missionsPassed: missions.MISSIONS.filter((m) => prog.get(m.id)?.passed).length,
       missionsTotal: missions.MISSIONS.length,
+      lessonsRead: lessonsRead(req.user.id).size,
+      lessonsTotal: lessons.LESSONS.length,
     });
   });
 

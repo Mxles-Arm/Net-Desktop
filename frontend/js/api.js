@@ -44,6 +44,10 @@ const api = (() => {
     exec: (workspace, device, command) => post("/api/engine/exec", { workspace, device, command }),
     hint: (workspace, level, attemptId) => post("/api/assistant/hint", { workspace, level, attemptId }),
 
+    lessons: () => get("/api/lessons"),
+    lesson: (id) => get(`/api/lessons/${id}`),
+    markLessonRead: (id) => post(`/api/lessons/${id}/read`),
+
     missions: () => get("/api/missions"),
     startMission: (id) => post(`/api/missions/${id}/start`),
     checkMission: (id, attemptId, workspace) => post(`/api/missions/${id}/check`, { attemptId, workspace }),

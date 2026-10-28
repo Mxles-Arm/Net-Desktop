@@ -58,10 +58,10 @@
 
     const ms = d.missions;
     $("#studentTable").innerHTML = d.students.length
-      ? `<thead><tr><th>รหัส</th><th class="left">ชื่อ</th><th>ก่อนเรียน</th><th>หลังเรียน</th><th>พัฒนาการ</th>${ms.map((m, i) => `<th title="${esc(m.title)}">ภารกิจ ${i + 1}</th>`).join("")}<th>ระหว่างเรียน</th><th>คำใบ้</th><th>เวลา (นาที)</th><th>ประเมิน</th><th></th></tr></thead><tbody>${d.students
+      ? `<thead><tr><th>รหัส</th><th class="left">ชื่อ</th><th>ก่อนเรียน</th><th>หลังเรียน</th><th>พัฒนาการ</th><th>บทเรียน</th>${ms.map((m, i) => `<th title="${esc(m.title)}">ภารกิจ ${i + 1}</th>`).join("")}<th>ระหว่างเรียน</th><th>คำใบ้</th><th>เวลา (นาที)</th><th>ประเมิน</th><th></th></tr></thead><tbody>${d.students
           .map(
             (s) =>
-              `<tr><td>${esc(s.studentId)}</td><td class="left">${esc(s.name)}</td>${show(s.pretest)}${show(s.posttest)}${show(s.gain != null ? (s.gain > 0 ? "+" : "") + s.gain : null)}${ms
+              `<tr><td>${esc(s.studentId)}</td><td class="left">${esc(s.name)}</td>${show(s.pretest)}${show(s.posttest)}${show(s.gain != null ? (s.gain > 0 ? "+" : "") + s.gain : null)}<td>${s.lessonsRead}/${d.lessonsTotal}</td>${ms
                 .map((m) => (s.missions[m.id] == null ? '<td class="muted">–</td>' : `<td>${MEDAL(s.missions[m.id])} ${s.missions[m.id]}</td>`))
                 .join("")}${show(s.exercise)}<td>${s.hints}</td>${show(s.minutes)}<td>${s.survey ? "✓" : "–"}</td><td><button data-del="${s.id}" data-name="${esc(s.name)}">ลบ</button></td></tr>`,
           )

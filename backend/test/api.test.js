@@ -159,6 +159,48 @@ test('mission flow: start → fail → hint → pass → score', () => withServe
   assert.equal((await b('POST', '/api/missions/lan-basic/check', { attemptId, workspace: solved })).status, 404);
 }));
 
+test('missions unlock in order; lessons are tracked', () => withServer(async (client) => {
+  const a = client();
+  await a('POST', '/api/auth/student', { studentId: 's1', name: 'Test User' });
+  let list = (await a('GET', '/api/missions')).body.missions;
+  assert.deepEqual(list.map((m) => m.unlocked), [true, false, false, false]);
+  assert.equal(list[1].requires, 'lan-basic');
+  assert.equal(list[0].lesson.id, 'lan');
+  // Skipping ahead through the API is refused.
+  const skip = await a('POST', '/api/missions/wifi-lab/start');
+  assert.equal(skip.status, 403);
+  assert.match(skip.body.error, /ภารกิจที่ 1/);
+
+  // Lessons: list, read content, mark as read (twice is fine).
+  const lessons = (await a('GET', '/api/lessons')).body.lessons;
+  assert.equal(lessons.length, 4);
+  assert.ok(lessons.every((l) => l.read === false));
+  const one = await a('GET', '/api/lessons/ip');
+  assert.ok(one.body.lesson.sections.length > 0);
+  assert.equal((await a('GET', '/api/lessons/nope')).status, 404);
+  assert.equal((await a('POST', '/api/lessons/ip/read')).status, 200);
+  assert.equal((await a('POST', '/api/lessons/ip/read')).status, 200);
+  assert.equal((await a('GET', '/api/progress')).body.lessonsRead, 1);
+
+  // Pass mission 1 → mission 2 unlocks.
+  const { attemptId, template } = (await a('POST', '/api/missions/lan-basic/start')).body;
+  await a('POST', '/api/missions/lan-basic/check', { attemptId, workspace: SOLUTIONS['lan-basic'](template) });
+  list = (await a('GET', '/api/missions')).body.missions;
+  assert.deepEqual(list.map((m) => m.unlocked), [true, true, false, false]);
+  assert.equal((await a('POST', '/api/missions/wifi-lab/start')).status, 201);
+  // A passed mission can always be replayed.
+  assert.equal((await a('POST', '/api/missions/lan-basic/start')).status, 201);
+
+  const t = client();
+  await t('POST', '/api/auth/teacher', { password: 'pw-teacher' });
+  assert.equal((await t('GET', '/api/teacher/summary')).body.students[0].lessonsRead, 1);
+}));
+
+test('every lesson links to an existing mission, in the same order', () => {
+  const lessons = require('../src/content/lessons');
+  for (const l of lessons.LESSONS) assert.equal(missions.byId(l.mission)?.order, l.order, l.id);
+});
+
 test('quizzes, survey and teacher reports', () => withServer(async (client) => {
   const a = client();
   await a('POST', '/api/auth/student', { studentId: '65001', name: 'สมชาย ใจดี' });

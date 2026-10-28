@@ -63,6 +63,12 @@ function open(file = DB_FILE) {
       comment     TEXT,
       created_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE TABLE IF NOT EXISTS lesson_reads (
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      lesson_id   TEXT NOT NULL,
+      read_at     TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (user_id, lesson_id)
+    );
     CREATE INDEX IF NOT EXISTS idx_ws_user ON workspaces(user_id);
     CREATE INDEX IF NOT EXISTS idx_attempt_user ON mission_attempts(user_id, mission_id);
     CREATE INDEX IF NOT EXISTS idx_quiz_user ON quiz_results(user_id, quiz_id);

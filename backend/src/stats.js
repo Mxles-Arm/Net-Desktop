@@ -1,6 +1,7 @@
 'use strict';
 // Teacher reports: per-student results, E1/E2 efficiency, survey statistics and CSV export.
 const missions = require('./content/missions');
+const lessons = require('./content/lessons');
 const { QUIZZES, SURVEY } = require('./content/quizzes');
 
 const ISSUE_LABEL = {
@@ -27,6 +28,8 @@ function students(db) {
   const quizRows = db.prepare('SELECT user_id, quiz_id, score, total, id FROM quiz_results ORDER BY id').all();
   const attempts = db.prepare('SELECT * FROM mission_attempts').all();
   const surveys = new Set(db.prepare('SELECT user_id FROM survey_responses').all().map((r) => r.user_id));
+  const reads = db.prepare('SELECT user_id, COUNT(*) AS n FROM lesson_reads GROUP BY user_id').all();
+  const readCount = new Map(reads.map((r) => [r.user_id, r.n]));
   const exerciseQuizzes = Object.values(QUIZZES).filter((q) => q.kind === 'exercise').map((q) => q.id);
 
   return users.map((u) => {
@@ -60,6 +63,7 @@ function students(db) {
       hints: myAttempts.reduce((n, a) => n + a.hints, 0),
       checks: myAttempts.reduce((n, a) => n + a.checks, 0),
       minutes: round(minutes, 1),
+      lessonsRead: readCount.get(u.id) || 0,
       survey: surveys.has(u.id),
     };
   });
@@ -92,6 +96,7 @@ function summary(db) {
 
   return {
     students: list,
+    lessonsTotal: lessons.LESSONS.length,
     missions: missions.MISSIONS.map((m) => ({ id: m.id, title: m.title })),
     totals: {
       students: list.length,
@@ -107,12 +112,12 @@ function summary(db) {
 function csv(db) {
   const list = students(db);
   const ms = missions.MISSIONS;
-  const head = ['รหัสนักเรียน', 'ชื่อ', 'ก่อนเรียน (%)', 'หลังเรียน (%)', 'พัฒนาการ (%)', ...ms.map((m) => `ภารกิจ: ${m.title}`), 'คะแนนระหว่างเรียน (%)', 'จำนวนคำใบ้', 'จำนวนครั้งที่ตรวจ', 'เวลาทำภารกิจ (นาที)', 'ทำแบบประเมินแล้ว'];
+  const head = ['รหัสนักเรียน', 'ชื่อ', 'ก่อนเรียน (%)', 'หลังเรียน (%)', 'พัฒนาการ (%)', `อ่านบทเรียน (จาก ${lessons.LESSONS.length})`, ...ms.map((m) => `ภารกิจ: ${m.title}`), 'คะแนนระหว่างเรียน (%)', 'จำนวนคำใบ้', 'จำนวนครั้งที่ตรวจ', 'เวลาทำภารกิจ (นาที)', 'ทำแบบประเมินแล้ว'];
   const cell = (v) => {
     const s = v == null ? '' : String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const rows = list.map((s) => [s.studentId, s.name, s.pretest, s.posttest, s.gain, ...ms.map((m) => s.missions[m.id]), s.exercise, s.hints, s.checks, s.minutes, s.survey ? 'ใช่' : 'ยังไม่ทำ']);
+  const rows = list.map((s) => [s.studentId, s.name, s.pretest, s.posttest, s.gain, s.lessonsRead, ...ms.map((m) => s.missions[m.id]), s.exercise, s.hints, s.checks, s.minutes, s.survey ? 'ใช่' : 'ยังไม่ทำ']);
   return [head, ...rows].map((r) => r.map(cell).join(',')).join('\r\n');
 }
 

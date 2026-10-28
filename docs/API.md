@@ -14,7 +14,7 @@
 | POST | `/api/auth/teacher` | `{ password }` | `{ user }` |
 | POST | `/api/auth/logout` | – | `{ ok }` |
 | GET | `/api/me` | – | `{ user }` หรือ `{ user: null }` |
-| GET | `/api/progress` | – | `{ pretest, posttest, survey, missionsPassed, missionsTotal }` |
+| GET | `/api/progress` | – | `{ pretest, posttest, survey, missionsPassed, missionsTotal, lessonsRead, lessonsTotal }` |
 
 ## Workspace (เห็นเฉพาะของตัวเอง)
 
@@ -42,13 +42,25 @@
 - `path[]` = id ของอุปกรณ์ที่ Packet วิ่งผ่าน (ใช้ทำแอนิเมชัน)
 - คำใบ้ที่ขอระหว่างทำภารกิจ (`attemptId`) จะถูกนับและหักคะแนน
 
+## บทเรียน
+
+| Method | Path | Body | ผลลัพธ์ |
+|---|---|---|---|
+| GET | `/api/lessons` | – | `{ lessons: [{ id, order, mission, title, goal, read }] }` |
+| GET | `/api/lessons/:id` | – | `{ lesson: { ..., sections: [{ h, p?, list?, code?, tip? }] }, read }` |
+| POST | `/api/lessons/:id/read` | – | `{ ok }` บันทึกว่าอ่านแล้ว (เรียกซ้ำได้) |
+
+`:id` = `lan`, `wifi`, `ip`, `dhcp-dns` — แต่ละบทคู่กับภารกิจลำดับเดียวกัน เนื้อหาอยู่ใน `backend/src/content/lessons.js`
+
 ## ภารกิจ
 
 | Method | Path | Body | ผลลัพธ์ |
 |---|---|---|---|
-| GET | `/api/missions` | – | `{ missions: [{ id, order, title, story, checks[], passed, bestScore, medal, attempts }] }` |
-| POST | `/api/missions/:id/start` | – | `{ attemptId, mission, template }` |
+| GET | `/api/missions` | – | `{ missions: [{ id, order, title, story, checks[], passed, bestScore, medal, attempts, unlocked, requires, lesson }] }` |
+| POST | `/api/missions/:id/start` | – | `{ attemptId, mission, template }` · 403 ถ้ายังไม่ผ่านภารกิจก่อนหน้า |
 | POST | `/api/missions/:id/check` | `{ attemptId, workspace }` | `{ passed, results[], issues[], score, medal, checks, hints, quiz }` |
+
+ภารกิจเปิดตามลำดับ: ภารกิจที่ N เริ่มได้เมื่อผ่านภารกิจที่ N−1 แล้ว (ภารกิจที่ผ่านแล้วเล่นซ้ำได้เสมอ)
 
 คะแนน = 100 − 10 × (ครั้งที่ตรวจไม่ผ่าน, สูงสุด 40) − 5 × (คำใบ้, สูงสุด 30) ขั้นต่ำ 40 ·
 เหรียญทอง ≥ 90, เงิน ≥ 75, ทองแดงต่ำกว่านั้น

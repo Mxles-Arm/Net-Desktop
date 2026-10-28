@@ -41,7 +41,7 @@ backend/             หลังบ้าน (Node.js + Express + SQLite)
   src/server.js      จุดเริ่มเซิร์ฟเวอร์
   src/app.js         API ทั้งหมด
   src/engine/        Network Engine — จำลอง IP, Subnet, Gateway, DHCP, DNS, Wi-Fi, ping, traceroute, คำสั่ง Terminal
-  src/content/       เนื้อหา: ภารกิจ แบบทดสอบ แบบประเมิน (แก้ไขข้อสอบ/ภารกิจได้ที่นี่)
+  src/content/       เนื้อหา: บทเรียน ภารกิจ แบบทดสอบ แบบประเมิน (แก้ไขเนื้อหา/ข้อสอบ/ภารกิจได้ที่นี่)
   src/stats.js       คำนวณคะแนน E1/E2 ความพึงพอใจ และไฟล์ CSV
   test/              ชุดทดสอบอัตโนมัติ
 docs/
@@ -68,7 +68,7 @@ docs/
 | ส่ง Packet | วิ่งตามเส้นทางจริงผ่าน Switch/Router ถ้าไปไม่ถึงจะบอกสาเหตุ |
 | Network Utility (Dock) | ข้อมูลเครือข่าย, Ping, Traceroute, DNS Lookup |
 | Terminal (Dock) | `ipconfig`, `ping`, `tracert`, `arp -a`, `nslookup`, `hostname`, `help` |
-| Mission Control (Dock) | 4 ภารกิจ ตรวจผ่านอัตโนมัติ ให้คะแนนและเหรียญ + คำถามหลังภารกิจ |
+| Mission Control (Dock) | บทเรียน 4 บท คู่กับ 4 ภารกิจ ภารกิจปลดล็อกตามลำดับ ตรวจผ่านอัตโนมัติ ให้คะแนนและเหรียญ + คำถามหลังภารกิจ |
 | CAI Assistant (มาสคอต) | คำใบ้ 3 ระดับตามปัญหาจริง (บอกปัญหา → ชี้อุปกรณ์ → บอกวิธีแก้) |
 | Learn (เมนู) | แบบทดสอบก่อน/หลังเรียน 10 ข้อ พร้อมเฉลยและคำอธิบาย, แบบประเมินความพึงพอใจ 8 ข้อ |
-| หน้าครู | คะแนนรายคน, E1/E2, x̄ และ S.D. ความพึงพอใจ, จุดที่ผิดบ่อย, Export CSV เปิดใน Excel ได้ |
+| หน้าครู | คะแนนรายคน, จำนวนบทเรียนที่อ่าน, E1/E2, x̄ และ S.D. ความพึงพอใจ, จุดที่ผิดบ่อย, Export CSV เปิดใน Excel ได้ |
