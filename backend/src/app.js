@@ -71,7 +71,8 @@ async function createApp(db, options = {}) {
     res.setHeader('Set-Cookie', `${COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_DAYS * 86400}${secure}`);
   };
 
-  app.use(h(async (req, _res, next) => {
+  // Only API calls need the session (static files would otherwise cost a database query each).
+  app.use('/api', h(async (req, _res, next) => {
     const token = readCookie(req, COOKIE);
     req.user = token
       ? (await db.get(`SELECT u.id, u.student_id AS studentId, u.name, u.role FROM sessions s JOIN users u ON u.id = s.user_id
@@ -97,8 +98,22 @@ async function createApp(db, options = {}) {
     res.json({ user: { id: Number(user.id), studentId, name, role: 'student' } });
   }));
 
+  // Slow down password guessing: after LOGIN_MAX_FAILS wrong passwords from one address, wait LOGIN_LOCK_MS.
+  const LOGIN_MAX_FAILS = 10;
+  const LOGIN_LOCK_MS = 15 * 60 * 1000;
+  const loginFails = new Map(); // ip -> { count, until }
   app.post('/api/auth/teacher', h(async (req, res) => {
-    if (!safeEqual(req.body?.password || '', teacherPassword)) fail(401, 'รหัสผ่านไม่ถูกต้อง');
+    const now = Date.now();
+    const entry = loginFails.get(req.ip);
+    if (entry && entry.until > now) fail(429, `ใส่รหัสผ่านผิดหลายครั้งเกินไป กรุณารอ ${Math.ceil((entry.until - now) / 60000)} นาทีแล้วลองใหม่`);
+    if (!safeEqual(req.body?.password || '', teacherPassword)) {
+      const lockExpired = entry && entry.until && entry.until <= now;
+      const count = (entry && !lockExpired ? entry.count : 0) + 1;
+      loginFails.set(req.ip, { count, until: count >= LOGIN_MAX_FAILS ? now + LOGIN_LOCK_MS : 0 });
+      if (loginFails.size > 10000) loginFails.clear();
+      fail(401, 'รหัสผ่านไม่ถูกต้อง');
+    }
+    loginFails.delete(req.ip);
     const t = await db.get("SELECT id, student_id AS studentId, name, role FROM users WHERE student_id = 'teacher'");
     await startSession(req, res, t.id);
     res.json({ user: t });

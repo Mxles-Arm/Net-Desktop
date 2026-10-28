@@ -8,6 +8,7 @@
   const MEDAL = { gold: "🥇 เหรียญทอง", silver: "🥈 เหรียญเงิน", bronze: "🥉 เหรียญทองแดง" };
   let user = null;
   let missionCache = null;
+  let leaving = false; // set once the learner chose to log out, so the page can reload without asking
 
   const wsData = (w) => ({
     nodes: w.nodes,
@@ -146,6 +147,7 @@
     } catch {
       /* already logged out */
     }
+    leaving = true;
     location.reload();
   }
 
@@ -318,6 +320,12 @@
   setInterval(() => {
     if (window.CAI) saveAllChanged();
   }, 20000);
+  // Closing or reloading the tab (Chrome also closes the tab on Ctrl+W) would lose unsaved work: ask first.
+  window.addEventListener("beforeunload", (e) => {
+    if (leaving || !window.CAI || !windows.some(isChanged)) return;
+    e.preventDefault();
+    e.returnValue = "";
+  });
 
   function confirmClose(w) {
     if (!isChanged(w)) return closeWorkspace(w, true);

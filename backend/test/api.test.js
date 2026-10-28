@@ -82,7 +82,7 @@ async function withServer(fn) {
       return { status: res.status, body: json, text, headers: res.headers };
     };
   };
-  try { await fn(client, base); } finally { server.close(); db.close(); }
+  try { await fn(client, base, db); } finally { server.close(); db.close(); }
 }
 
 test('auth, workspaces and ownership', () => withServer(async (client) => {
@@ -157,6 +157,37 @@ test('mission flow: start → fail → hint → pass → score', () => withServe
   const b = client();
   await b('POST', '/api/auth/student', { studentId: 's2', name: 'Other User' });
   assert.equal((await b('POST', '/api/missions/lan-basic/check', { attemptId, workspace: solved })).status, 404);
+}));
+
+test('teacher login is locked after 10 wrong passwords', () => withServer(async (client) => {
+  const t = client();
+  for (let i = 0; i < 10; i++) assert.equal((await t('POST', '/api/auth/teacher', { password: 'wrong' + i })).status, 401);
+  const locked = await t('POST', '/api/auth/teacher', { password: 'pw-teacher' });
+  assert.equal(locked.status, 429); // even the right password waits until the lock ends
+  assert.match(locked.body.error, /รอ \d+ นาที/);
+}));
+
+test('a correct teacher password resets the failure count', () => withServer(async (client) => {
+  const t = client();
+  for (let i = 0; i < 9; i++) await t('POST', '/api/auth/teacher', { password: 'wrong' });
+  assert.equal((await t('POST', '/api/auth/teacher', { password: 'pw-teacher' })).status, 200);
+  for (let i = 0; i < 9; i++) assert.equal((await t('POST', '/api/auth/teacher', { password: 'wrong' })).status, 401);
+}));
+
+test('static files do not query the database', () => withServer(async (client, base, db) => {
+  let queries = 0;
+  for (const k of ['get', 'all', 'run']) { const f = db[k]; db[k] = (...a) => { queries++; return f(...a); }; }
+  for (const p of ['/', '/css/style.css', '/js/app.js']) {
+    const res = await fetch(base + p);
+    assert.equal(res.status, 200, p);
+    await res.arrayBuffer();
+  }
+  assert.equal(queries, 0);
+  const a = client();
+  await a('POST', '/api/auth/student', { studentId: 's1', name: 'Test User' });
+  queries = 0;
+  assert.equal((await a('GET', '/api/me')).body.user.studentId, 's1');
+  assert.ok(queries > 0); // API calls still look up the session
 }));
 
 test('missions unlock in order; lessons are tracked', () => withServer(async (client) => {
