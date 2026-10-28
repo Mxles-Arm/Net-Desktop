@@ -46,8 +46,9 @@ const seed = [
     mask: "255.255.255.0",
     gateway: "192.168.1.1",
     dns: "192.168.1.1",
-    x: 610,
-    y: 190,
+    // Keep inside the default canvas (~530px wide in a 900px window).
+    x: 180,
+    y: 340,
     w: 110,
     h: 88,
     wifi: true,
@@ -697,6 +698,7 @@ function addDevice(w, type, x, y) {
 function resizeSelected(w, k) {
   const n = getSelected(w);
   if (!n) return;
+  snapshot(w);
   n.w = Math.max(75, Math.min(220, n.w * k));
   n.h = Math.max(60, Math.min(176, n.h * k));
   render(w);
@@ -991,9 +993,18 @@ function showDialog(title, html, opts = {}) {
 function toast(s) {
   const t = document.querySelector("#toast");
   t.textContent = s;
+  // The toast is a popover so it is drawn above modal dialogs (which live in the top layer).
+  // Re-opening it moves it to the top of the stack, above a dialog opened after it.
+  if (t.showPopover) {
+    if (t.matches(":popover-open")) t.hidePopover();
+    t.showPopover();
+  }
   t.classList.add("show");
   clearTimeout(t.timer);
-  t.timer = setTimeout(() => t.classList.remove("show"), 1800);
+  t.timer = setTimeout(() => {
+    t.classList.remove("show");
+    t.timer = setTimeout(() => t.matches?.(":popover-open") && t.hidePopover(), 250);
+  }, 1800);
 }
 function updateClock() {
   document.querySelector("#clock").textContent = new Intl.DateTimeFormat("th-TH", {

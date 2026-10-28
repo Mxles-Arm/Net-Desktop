@@ -167,6 +167,7 @@ test('terminal commands', () => {
   assert.match(engine.exec(ws, 'p1', 'nslookup nothing').lines.join('\n'), /Non-existent domain/);
   assert.match(engine.exec(ws, 'p1', 'arp -a').lines.join('\n'), /192\.168\.1\.12/);
   assert.match(engine.exec(ws, 'p1', 'tracert 192.168.1.21').lines.join('\n'), /Trace complete/);
+  assert.deepEqual(engine.exec(ws, 'p1', 'tracert nothing').lines, ['Unable to resolve target system name nothing.']);
   assert.equal(engine.exec(ws, 'p1', 'clear').clear, true);
   assert.equal(engine.exec(ws, 'p1', 'rm -rf /').ok, false);
 });

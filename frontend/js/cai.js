@@ -123,7 +123,23 @@
       fail(e);
     }
   }
-  async function logout() {
+  async function logout(force) {
+    // Saved workspaces are saved automatically; never-saved ones would be lost, so ask first.
+    const unsaved = windows.filter((w) => !w.serverId && isChanged(w));
+    if (unsaved.length && !force) {
+      showDialog(
+        "ออกจากระบบ",
+        `<p>มี Workspace ที่ยังไม่เคยบันทึก ${unsaved.length} งาน: <b>${unsaved.map((w) => esc(w.name)).join(", ")}</b></p><p>ถ้าออกจากระบบตอนนี้ งานเหล่านี้จะหายไป</p><div class="dialog-actions"><button id="loCancel">ยกเลิก</button> <button id="loDiscard" class="danger-btn">ออกโดยไม่บันทึก</button> <button id="loSave" class="primary-btn">บันทึกแล้วออก</button></div>`,
+        { noClose: true },
+      );
+      $("#loCancel").onclick = closeDialog;
+      $("#loDiscard").onclick = () => logout(true);
+      $("#loSave").onclick = async () => {
+        for (const w of unsaved) if (!(await save(w, true))) return toast(`บันทึก "${w.name}" ไม่สำเร็จ`);
+        logout(true);
+      };
+      return;
+    }
     await saveAllChanged();
     try {
       await api.logout();

@@ -577,6 +577,7 @@ function partialPath(net, fromId, r) {
 function traceroute(workspace, fromRef, target, prebuilt) {
   const net = prebuilt || build(workspace);
   const p = ping(workspace, fromRef, target, 1, net);
+  if (['NO_DNS', 'DNS_UNREACHABLE', 'NXDOMAIN'].includes(p.code)) return { ...p, lines: [`Unable to resolve target system name ${target}.`], hops: [] };
   if (p.code === 'UNKNOWN_SOURCE' || (!p.targetIp && !p.ok)) return { ...p, hops: [] };
   const lines = [`Tracing route to ${p.targetIp} over a maximum of 30 hops`, ''];
   const hops = [];
