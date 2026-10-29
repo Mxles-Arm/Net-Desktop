@@ -243,7 +243,10 @@ function syncMinimizedDock() {
       b.onclick = () => focusWindow(w);
       area.appendChild(b);
     });
+  window.DesktopWindows?.renderMinimized(area);
 }
+window.syncMinimizedDock = syncMinimizedDock;
+window.nextDesktopZ = () => ++zTop;
 function snapshot(w) {
   w.history.push(JSON.stringify({ nodes: w.nodes, links: w.links, notes: w.notes, strokes: w.strokes }));
   if (w.history.length > 30) w.history.shift();
@@ -694,12 +697,6 @@ function showWifiPanel(w) {
     };
   }, 0);
 }
-function showEncyclopedia() {
-  showDialog(
-    "Net Encyclopedia",
-    `<div class="encyclopedia"><div class="device-info"><b>◉</b><div><b>Router</b><span>กำหนดเส้นทางข้อมูลระหว่างเครือข่าย และมักแจก IP ให้เครื่องในห้องเรียน</span></div></div><div class="device-info"><b>▤</b><div><b>Switch</b><span>เชื่อมอุปกรณ์แบบสายภายใน LAN และส่งเฟรมไปยังพอร์ตปลายทาง</span></div></div><div class="device-info"><b>▣</b><div><b>Computer</b><span>เครื่องปลายทางแบบตั้งโต๊ะ เหมาะกับการทดลอง IP และการส่ง Packet</span></div></div><div class="device-info"><b>▱</b><div><b>Notebook</b><span>เครื่องปลายทางพกพา รองรับทั้งสาย LAN และ Wi-Fi</span></div></div><div class="device-info"><b>▥</b><div><b>Server</b><span>ให้บริการข้อมูล เว็บไซต์ หรือไฟล์แก่เครื่องลูกข่ายในเครือข่าย</span></div></div><div class="device-info"><b>◔</b><div><b>Access Point</b><span>กระจายสัญญาณ Wi-Fi เพื่อเชื่อมอุปกรณ์ไร้สายเข้ากับ LAN</span></div></div><div class="device-info"><b>⌁</b><div><b>LAN / Wi-Fi</b><span>เส้นทึบสีฟ้าคือสาย LAN ส่วนเส้นประสีม่วงคือการเชื่อมต่อไร้สาย</span></div></div></div>`,
-  );
-}
 function showAboutNet() {
   showDialog(
     "About Net Desktop",
@@ -963,7 +960,7 @@ function command(cmd) {
       "Net Desktop Help",
       "เลือกอุปกรณ์จาก Sidebar ของ Workspace<br>ใช้ Connect Cable สำหรับสาย LAN หรือ Connect Wi-Fi สำหรับไร้สาย<br>เลือก Send Packet แล้วคลิกต้นทางและปลายทาง",
     );
-  if (cmd === "encyclopedia") showEncyclopedia();
+  if (cmd === "encyclopedia") window.NetKnowledge?.open();
   if (cmd === "shortcuts")
     showDialog(
       "Keyboard Shortcuts",
@@ -1017,7 +1014,7 @@ document.querySelector("[data-dock=workspace]").onclick = () => {
   const hidden = windows.find((w) => w.el.classList.contains("minimized"));
   hidden ? focusWindow(hidden) : newWorkspace();
 };
-document.querySelector("[data-dock=encyclopedia]").onclick = showEncyclopedia;
+document.querySelector("[data-dock=encyclopedia]").onclick = () => window.NetKnowledge?.open();
 document.querySelector("[data-dock=lessons]").onclick = () => window.CAI?.missionControl();
 document.querySelector("[data-dock=files]").onclick = () => window.CAI?.openFinder();
 document.querySelector("[data-dock=settings]").onclick = () =>
@@ -1039,7 +1036,7 @@ document.querySelector("#assistantDock").onclick = () => window.CAI?.assistant(a
 function showDialog(title, html, opts = {}) {
   const d = document.querySelector("#dialog");
   if (d.open) d.close();
-  d.className = "dialog" + (opts.wide ? " wide" : "");
+  d.className = "dialog" + (opts.wide ? " wide" : "") + (opts.app ? ` ${opts.app}` : "");
   document.querySelector("#dialogTitle").textContent = title;
   document.querySelector("#dialogBody").innerHTML =
     html +

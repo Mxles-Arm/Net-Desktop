@@ -1,5 +1,5 @@
 // CAI layer: connects the Net Desktop UI (app.js) to the backend — login, saving, the Network
-// Engine (live checks, ping, terminal), Mission Control, quizzes, survey and the CAI Assistant.
+// Engine (live checks, ping, terminal), Mission Control, quizzes, survey and Navi.
 // app.js calls into this file through window.CAI, which is only set after the learner logs in.
 (() => {
   const $ = (s, root = document) => root.querySelector(s);
@@ -99,7 +99,8 @@
 
   async function enter(u, fresh) {
     user = u;
-    $("#userName").textContent = u.name;
+    $("#accountName").textContent = u.name;
+    $("#accountId").textContent = `รหัสผู้เรียน ${u.studentId}`;
     loginScreen.hidden = true;
     window.CAI = CAI;
     windows.forEach((w) => {
@@ -247,7 +248,7 @@
       "ผลการทดสอบเครือข่าย",
       `${statRow}<ul class="issue-list">${a.issues
         .map((i) => `<li class="${i.severity}"><span>${i.severity === "error" ? "⚠" : "△"}</span>${esc(i.message)}</li>`)
-        .join("")}</ul><p class="hint-line">💡 ไม่รู้จะแก้ยังไง? คลิกมาสคอต <b>CAI Assistant</b> ใน Dock เพื่อขอคำใบ้</p>`,
+        .join("")}</ul><p class="hint-line">💡 ไม่รู้จะแก้ยังไง? คลิกมาสคอต <b>Navi</b> ใน Dock เพื่อขอคำแนะนำ</p>`,
       { wide: true },
     );
   }
@@ -522,7 +523,7 @@
       const failed = res.results.filter((r) => !r.pass);
       showDialog(
         "ยังไม่ผ่านภารกิจ",
-        `<p>ผ่านแล้ว ${res.results.length - failed.length}/${res.results.length} เงื่อนไข</p><ul class="issue-list">${failed.map((r) => `<li class="error"><span>✗</span>${esc(r.label)}</li>`).join("")}</ul>${res.issues.length ? `<p class="hint-line">พบปัญหาในเครือข่าย ${res.issues.length} รายการ — กด "ทดสอบเครือข่าย" เพื่อดูรายละเอียด</p>` : ""}<p class="hint-line">💡 คลิกมาสคอต CAI Assistant เพื่อขอคำใบ้</p>`,
+        `<p>ผ่านแล้ว ${res.results.length - failed.length}/${res.results.length} เงื่อนไข</p><ul class="issue-list">${failed.map((r) => `<li class="error"><span>✗</span>${esc(r.label)}</li>`).join("")}</ul>${res.issues.length ? `<p class="hint-line">พบปัญหาในเครือข่าย ${res.issues.length} รายการ — กด "ทดสอบเครือข่าย" เพื่อดูรายละเอียด</p>` : ""}<p class="hint-line">💡 คลิกมาสคอต Navi เพื่อขอคำแนะนำ</p>`,
       );
     }
   }
@@ -704,38 +705,10 @@
     );
   }
 
-  // ================= CAI Assistant =================
-  async function assistant(w) {
-    if (!w) {
-      return showDialog(
-        "CAI Assistant",
-        `<div class="assistant-box"><div class="assistant-face"></div><div><p>สวัสดีครับ! เปิด Workspace หรือเริ่มภารกิจจาก <b>Mission Control</b> ใน Dock ได้เลย</p><p>เวลาติดปัญหา คลิกผมเพื่อขอคำใบ้ได้ทุกเมื่อ</p></div></div>`,
-      );
-    }
-    let level = 1;
-    const ask = async () => {
-      let res;
-      try {
-        res = await api.hint(wsData(w), level, w.attemptId);
-      } catch (e) {
-        return fail(e);
-      }
-      if (res.highlight.length) flash(w, res.highlight);
-      const more = res.hasProblem && level < 3;
-      showDialog(
-        "CAI Assistant",
-        `<div class="assistant-box"><div class="assistant-face"></div><div><div class="hint-level">${res.hasProblem ? `คำใบ้ระดับ ${level}/3` : "เยี่ยมมาก!"}</div><p class="hint-text">${esc(res.text)}</p>${res.hasProblem && res.remaining > 1 ? `<small>ยังมีปัญหาอีก ${res.remaining - 1} จุด แก้ทีละจุดนะครับ</small>` : ""}</div></div><div class="dialog-actions">${more ? `<button id="hintMore" class="primary-btn">ขอคำใบ้เพิ่ม (ระดับ ${level + 1})</button> ` : ""}<button id="hintClose">เข้าใจแล้ว</button></div>`,
-        { noClose: true },
-      );
-      $("#hintClose").onclick = closeDialog;
-      $("#hintMore")?.addEventListener("click", () => {
-        level++;
-        ask();
-      });
-    };
-    ask();
-  }
+  // Navi owns its UI and answer rules in navi.js; CAI supplies current session context.
+  const assistant = (workspace) => window.NaviAssistant?.open(workspace, user);
 
+  // ================= Network Utility =================
   // ================= Network Utility =================
   function utility(w, tab = "ping") {
     w = w || needWorkspace();

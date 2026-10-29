@@ -9,6 +9,9 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/cai.css">
 <link rel="stylesheet" href="css/yosemite.css">
+<link rel="stylesheet" href="css/desktop-windows.css">
+<link rel="stylesheet" href="css/knowledge-browser.css">
+<link rel="stylesheet" href="css/navi.css">
 </head>
 <body class="yosemite-theme">
 <div class="desktop" id="desktop">
@@ -16,32 +19,46 @@
 <!-- Menu bar -->
 <div class="menubar">
   <div class="menu-left">
-    <i class="orb"></i>
-    <button class="app-name" data-menu="net">Net Desktop</button>
-    <button class="menu-btn" data-menu="file">File</button>
-    <button class="menu-btn" data-menu="edit">Edit</button>
-    <button class="menu-btn" data-menu="view">View</button>
-    <button class="menu-btn" data-menu="network">Network</button>
-    <button class="menu-btn" data-menu="learn">Learn</button>
-    <button class="menu-btn" data-menu="help">Help</button>
+    <div class="brand-cluster">
+      <button class="orb account-orb" data-menu="account" aria-label="เปิดเมนูบัญชีผู้ใช้" title="บัญชีผู้ใช้"></button>
+      <button class="app-name" data-menu="net">Net Desktop</button>
+    </div>
+    <nav class="menu-primary" aria-label="เมนูหลัก">
+      <span class="menu-group">
+        <button class="menu-btn" data-menu="file">File</button>
+        <button class="menu-btn" data-menu="edit">Edit</button>
+        <button class="menu-btn" data-menu="view">View</button>
+      </span>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <span class="menu-group">
+        <button class="menu-btn" data-menu="network">Network</button>
+        <button class="menu-btn" data-menu="learn">Learn</button>
+      </span>
+      <span class="menu-separator" aria-hidden="true"></span>
+      <button class="menu-btn" data-menu="help">Help</button>
+    </nav>
   </div>
   <div class="menu-right">
-    <button class="menu-btn user-btn" data-menu="user" id="userMenuBtn">👤 <span id="userName">ผู้เรียน</span></button>
     <button class="wifi-status" id="wifiStatus" title="เปิดการตั้งค่า Wi-Fi">◔ Wi-Fi</button>
     <span class="clock" id="clock"></span>
   </div>
 </div>
 
 <!-- Dropdown menus: each button runs command(data-cmd) -->
+<div class="dropdown account-menu" id="menu-account">
+  <div class="account-summary"><span class="account-avatar" aria-hidden="true"></span><div><small>กำลังเข้าสู่ระบบ</small><strong id="accountName">ผู้เรียน</strong><span id="accountId">Student account</span></div></div>
+  <div class="menu-section-label">บัญชีและการเรียน</div>
+  <button data-cmd="progress"><span>ความคืบหน้าของฉัน</span><kbd>›</kbd></button>
+  <hr>
+  <button data-cmd="logout" class="logout-menu-item"><span>ออกจากระบบ</span><kbd>⇥</kbd></button>
+</div>
 <div class="dropdown" id="menu-net"><button data-cmd="aboutNet">About Net Desktop</button><hr><button data-cmd="systemInfo">System Information</button><button data-cmd="preferences">Preferences…</button></div>
 <div class="dropdown" id="menu-file"><button data-cmd="new">New Workspace <span>⌘N</span></button><button data-cmd="open">Open… (Finder)</button><button data-cmd="save">Save Workspace <span>⌘S</span></button><button data-cmd="export">Export JSON</button><hr><button data-cmd="close">Close Workspace <span>⌘W</span></button></div>
 <div class="dropdown" id="menu-edit"><button data-cmd="details">Workspace Details</button><button data-cmd="undo">Undo <span>⌘Z</span></button><hr><button data-cmd="clear">Clear Workspace</button></div>
 <div class="dropdown" id="menu-view"><button data-cmd="tile">Tile All Windows</button><button data-cmd="zoomIn">Zoom In</button><button data-cmd="zoomOut">Zoom Out</button><button data-cmd="resetView">Actual Size</button><hr><button data-cmd="fullscreen">Enter Full Screen</button></div>
 <div class="dropdown" id="menu-network"><button data-cmd="addRouter">Add Router</button><button data-cmd="addSwitch">Add Switch</button><button data-cmd="addPc">Add Computer</button><button data-cmd="addLaptop">Add Notebook</button><button data-cmd="addAccess">Add Access Point</button><button data-cmd="wire">Connect Cable</button><button data-cmd="wifi">Connect Wi-Fi</button><button data-cmd="wifiSettings">Wi-Fi Settings…</button><hr><button data-cmd="test">Test Network</button><button data-cmd="utility">Network Utility</button><button data-cmd="terminal">Terminal</button></div>
 <div class="dropdown" id="menu-learn"><button data-cmd="missions">Mission Control (บทเรียน + ภารกิจ)</button><hr><button data-cmd="pretest">แบบทดสอบก่อนเรียน</button><button data-cmd="posttest">แบบทดสอบหลังเรียน</button><button data-cmd="survey">แบบประเมินความพึงพอใจ</button><hr><button data-cmd="progress">ความคืบหน้าของฉัน</button></div>
-<div class="dropdown" id="menu-help"><button data-cmd="guide">Net Desktop Help</button><button data-cmd="encyclopedia">สารานุกรมอุปกรณ์</button><button data-cmd="shortcuts">Keyboard Shortcuts</button><hr><button data-cmd="aboutNet">About Net Desktop</button></div>
-<div class="dropdown" id="menu-user"><button data-cmd="progress">ความคืบหน้าของฉัน</button><hr><button data-cmd="logout">ออกจากระบบ</button></div>
-
+<div class="dropdown" id="menu-help"><button data-cmd="guide">Net Desktop Help</button><button data-cmd="encyclopedia">Net Knowledge Browser</button><button data-cmd="shortcuts">Keyboard Shortcuts</button><hr><button data-cmd="aboutNet">About Net Desktop</button></div>
 <!-- Desktop icons -->
 <section class="desktop-icons">
   <button class="desk-icon" data-open="workspace"><span class="icon workspace-icon"></span>Workspace ใหม่</button>
@@ -51,8 +68,8 @@
 
 <!-- Dock -->
 <div class="dock-wrap"><nav class="dock">
-  <button class="dock-item" id="assistantDock" data-tip="CAI Assistant (ขอคำใบ้)" aria-label="CAI Assistant ขอคำใบ้"><span class="dock-icon mascot" aria-hidden="true"></span></button>
-  <button class="dock-item" data-dock="encyclopedia" data-tip="Net Encyclopedia" aria-label="เปิดสารานุกรมเครือข่าย"><span class="dock-icon safari-app" aria-hidden="true"></span></button>
+  <button class="dock-item" id="assistantDock" data-tip="Navi — ผู้ช่วยเครือข่าย" aria-label="เปิด Navi ผู้ช่วยเครือข่าย"><span class="dock-icon mascot" aria-hidden="true"></span></button>
+  <button class="dock-item" data-dock="encyclopedia" data-tip="Net Knowledge Browser" aria-label="เปิดเบราว์เซอร์คลังความรู้เครือข่าย"><span class="dock-icon safari-app" aria-hidden="true"></span></button>
   <span class="dock-sep"></span>
   <button class="dock-item" data-dock="workspace" data-tip="Workspaces" aria-label="เปิด Workspace"><span class="dock-icon app-icon workspace-app" aria-hidden="true">▣</span></button>
   <button class="dock-item" data-dock="lessons" data-tip="Mission Control" aria-label="เปิด Mission Control"><span class="dock-icon app-icon lesson-app" aria-hidden="true">✎</span></button>
@@ -92,6 +109,9 @@
 
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
+<script src="js/desktop-window.js"></script>
+<script src="js/knowledge-browser.js"></script>
+<script src="js/navi.js"></script>
 <script src="js/cai.js"></script>
 </body>
 </html>

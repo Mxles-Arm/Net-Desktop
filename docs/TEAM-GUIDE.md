@@ -144,7 +144,7 @@ JavaScript หาองค์ประกอบในหน้าจากชื
 แก้สี ขนาด ตำแหน่ง ฟอนต์ ใน CSS ได้เต็มที่ แต่ **ห้ามเปลี่ยนชื่อ** รายการต่อไปนี้ใน HTML/JS:
 
 **id** (ใน `index.html` / `teacher.html`):
-`desktop` `windowLayer` `dialog` `dialogTitle` `dialogBody` `toast` `clock` `wifiStatus` `userName` `assistantDock` `minimizedArea`
+`desktop` `windowLayer` `dialog` `dialogTitle` `dialogBody` `toast` `clock` `wifiStatus` `assistantDock` `minimizedArea`
 `loginScreen` `loginForm` `loginFields` `loginStatus` `loginId` `loginName` `loginBtn` `idWarn`
 `loginCard` `teacherForm` `tPass` `kbWarn` `loginError` `report` `kpis` `studentTable` `studentNote` `surveyTable` `comments` `mistakes` `barActions` `refreshBtn` `logoutBtn`
 
@@ -172,12 +172,19 @@ JavaScript หาองค์ประกอบในหน้าจากชื
 | `frontend/index.html` | หน้าหลักผู้เรียน (เมนู, Dock, หน้าล็อกอิน) |
 | `frontend/css/style.css` | หน้าตาเดิมของ Net Desktop |
 | `frontend/css/cai.css` | หน้าตาส่วนที่เพิ่ม: ล็อกอิน, Inspector, ภารกิจ, บทเรียน, แบบทดสอบ, Terminal, Network Utility |
+| `frontend/css/yosemite.css` | Theme หลัก, Desktop, Workspace และ Dock |
+| `frontend/css/desktop-windows.css`, `knowledge-browser.css`, `navi.css` | CSS ของหน้าต่างและแต่ละแอป |
 | `frontend/js/app.js` | Desktop, หน้าต่าง Workspace, ลากอุปกรณ์, ต่อสาย |
-| `frontend/js/cai.js` | ต่อกับหลังบ้าน: ล็อกอิน, บันทึก, ภารกิจ, คำใบ้, แบบทดสอบ, Terminal |
+| `frontend/js/desktop-window.js` | shell หน้าต่างแอปและการย่อเข้า Dock |
+| `frontend/js/knowledge-browser.js` | Net Encyclopedia และระบบค้นหา |
+| `frontend/js/navi.js` | UI และกฎถามตอบของ Navi |
+| `frontend/js/cai.js` | ต่อกับหลังบ้าน: ล็อกอิน, บันทึก, ภารกิจ, แบบทดสอบ, Terminal |
 | `frontend/js/api.js` | รายการคำสั่งเรียก API |
 | `frontend/teacher.html`, `css/teacher.css`, `js/teacher.js` | หน้าครู |
 | `backend/src/content/` | **เนื้อหา**: บทเรียน (`lessons.js`), ภารกิจ (`missions.js`), ข้อสอบ/แบบประเมิน (`quizzes.js`) |
 | `backend/src/engine/` | ตัวจำลองเครือข่าย (IP, DHCP, DNS, Wi-Fi, ping) |
+
+รายละเอียด dependency และ public API ของแต่ละโมดูลอยู่ที่ `docs/FRONTEND-ARCHITECTURE.md`
 | `docs/API.md`, `docs/DATA-FORMAT.md` | รายการ API และรูปแบบข้อมูล |
 | `docs/DEPLOY.md` | วิธีขึ้น Host (Render + Turso) |
 

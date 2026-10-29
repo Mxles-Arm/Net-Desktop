@@ -5,6 +5,7 @@
 มีภารกิจ แบบทดสอบก่อน–หลังเรียน แบบประเมินความพึงพอใจ และหน้าสรุปผลสำหรับครู (E1/E2)
 
 > 👥 **ทำงานร่วมกันในทีม:** อ่าน [docs/TEAM-GUIDE.md](docs/TEAM-GUIDE.md) ก่อนเริ่ม — วิธี `git pull`/`push`, บัญชีทดสอบ, ข้อห้ามสำหรับคนแต่งหน้าบ้าน
+> โครงสร้างโมดูลหน้าบ้านและ public API อยู่ที่ [docs/FRONTEND-ARCHITECTURE.md](docs/FRONTEND-ARCHITECTURE.md)
 
 ## วิธีรัน
 
@@ -40,7 +41,12 @@ frontend/            หน้าบ้าน (HTML/CSS/JS ล้วน ไม�
   teacher.html       หน้าสรุปผลของครู
   css/style.css      หน้าตาเดิมของ Net Desktop
   css/cai.css        หน้าตาของส่วนที่เพิ่ม (ล็อกอิน ภารกิจ แบบทดสอบ Terminal ฯลฯ)
-  js/app.js          Desktop, Workspace, การลากอุปกรณ์ (โค้ดเดิม + จุดเชื่อมต่อ)
+  css/yosemite.css   ธีมหลัก Desktop, Workspace และ Dock
+  css/desktop-windows.css / knowledge-browser.css / navi.css  CSS แยกตามฟีเจอร์
+  js/app.js          Desktop, Workspace และการลากอุปกรณ์
+  js/desktop-window.js  shell หน้าต่างแอปแบบ Yosemite
+  js/knowledge-browser.js  Net Encyclopedia และระบบค้นหา
+  js/navi.js         UI และกฎถามตอบของ Navi
   js/api.js          ฟังก์ชันเรียก API ของหลังบ้าน
   js/cai.js          ฟีเจอร์ที่ต่อกับหลังบ้าน (ล็อกอิน บันทึก ภารกิจ คำใบ้ Network Utility Terminal)
   js/teacher.js      หน้าครู
@@ -62,7 +68,7 @@ docs/
 
 ## สำหรับคนแต่งหน้าบ้าน
 
-- แก้หน้าตาได้ที่ `css/style.css` และ `css/cai.css` ได้เลย ไม่กระทบหลังบ้าน
+- แก้หน้าตาส่วนกลางที่ `css/yosemite.css`; หน้าต่าง, Browser และ Navi มี CSS ของตัวเอง ดูแผนที่ไฟล์ใน `docs/FRONTEND-ARCHITECTURE.md`
 - อย่าเปลี่ยนชื่อ `class` / `id` / `data-*` ที่ JavaScript ใช้อ้างอิง เช่น `data-field`, `data-cmd`, `data-dock`, `.mission-check`, `[data-net-status]`, `[data-device-status]`, `.mission-panel`
 - ถ้าเพิ่มค่าใหม่ให้อุปกรณ์ ดูชื่อฟิลด์ที่หลังบ้านอ่านใน `docs/DATA-FORMAT.md`
 - ฟังก์ชันใน `app.js` เรียกฟีเจอร์ใหม่ผ่าน `window.CAI` (มีหลังจากผู้เรียนล็อกอินแล้ว)
@@ -80,6 +86,6 @@ docs/
 | Network Utility (Dock) | ข้อมูลเครือข่าย, Ping, Traceroute, DNS Lookup |
 | Terminal (Dock) | `ipconfig`, `ping`, `tracert`, `arp -a`, `nslookup`, `hostname`, `help` |
 | Mission Control (Dock) | บทเรียน 4 บท คู่กับ 4 ภารกิจ ภารกิจปลดล็อกตามลำดับ ตรวจผ่านอัตโนมัติ ให้คะแนนและเหรียญ + คำถามหลังภารกิจ |
-| CAI Assistant (มาสคอต) | คำใบ้ 3 ระดับตามปัญหาจริง (บอกปัญหา → ชี้อุปกรณ์ → บอกวิธีแก้) |
+| Navi (มาสคอตผู้ช่วยเครือข่าย) | ถามตอบความรู้ ตรวจ Workspace และให้คำใบ้ตามปัญหาจริง |
 | Learn (เมนู) | แบบทดสอบก่อน/หลังเรียน 10 ข้อ พร้อมเฉลยและคำอธิบาย, แบบประเมินความพึงพอใจ 8 ข้อ |
 | หน้าครู | คะแนนรายคน, จำนวนบทเรียนที่อ่าน, E1/E2, x̄ และ S.D. ความพึงพอใจ, จุดที่ผิดบ่อย, Export CSV เปิดใน Excel ได้ |

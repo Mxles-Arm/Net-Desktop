@@ -80,11 +80,14 @@
   width: 18px;
   height: 20px;
   margin-right: 5px;
+  padding: 0;
+  border: 0;
   border-radius: 0;
   background: none;
   box-shadow: none;
   background: url("../assets/dock-assistant-yosemite.png") center/contain no-repeat;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.22));
+  cursor: pointer;
 }
 
 .orb::before {
@@ -104,6 +107,31 @@
 
 .app-name { font-weight: 650; }
 .menu-left, .menu-right { gap: 1px; }
+.brand-cluster,
+.menu-primary,
+.menu-group {
+  display: flex;
+  align-items: center;
+}
+.brand-cluster {
+  min-height: 23px;
+  padding-right: 3px;
+}
+.menu-primary { gap: 2px; }
+.menu-group { gap: 1px; }
+.menu-separator {
+  width: 1px;
+  height: 14px;
+  margin: 0 3px;
+  background: rgba(50, 54, 61, 0.16);
+}
+.account-orb.open,
+.account-orb:hover {
+  border-radius: 4px;
+  background-color: rgba(22, 135, 248, 0.16);
+  box-shadow: 0 0 0 3px rgba(22, 135, 248, 0.16);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18));
+}
 
 .menu-btn.open,
 .menu-btn:hover,
@@ -138,6 +166,61 @@
 
 .dropdown button:hover { background: var(--yo-blue); }
 .dropdown hr { border-color: rgba(45, 49, 55, 0.16); margin: 4px 8px; }
+.account-menu {
+  width: 276px;
+  padding: 7px;
+  border-radius: 0 0 10px 10px;
+}
+.account-summary {
+  display: grid;
+  grid-template-columns: 47px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 5px;
+  border: 1px solid rgba(42, 47, 54, 0.11);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(235, 241, 247, 0.88));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.8);
+}
+.account-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 11px;
+  background: #e9f5ff url("../assets/dock-assistant-yosemite.png") center/contain no-repeat;
+  box-shadow: 0 2px 6px rgba(24, 51, 75, 0.16);
+}
+.account-summary > div { min-width: 0; display: grid; }
+.account-summary small,
+.account-summary span {
+  overflow: hidden;
+  color: #747981;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-summary strong {
+  overflow: hidden;
+  color: #2f3339;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu-section-label {
+  padding: 5px 11px 3px;
+  color: #858990;
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+}
+.account-menu button { height: 31px; }
+.account-menu button kbd {
+  color: #92969c;
+  font: 11px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.account-menu .logout-menu-item { color: #bd3530; }
+.account-menu .logout-menu-item:hover { background: #d94a43; color: #fff; }
+.account-menu .logout-menu-item:hover kbd { color: rgba(255, 255, 255, 0.8); }
 
 /* ---------- Desktop icons ---------- */
 .desktop-icons { top: 47px; right: 22px; gap: 22px 14px; }
@@ -183,6 +266,7 @@
 }
 
 .workspace.maximized { border-radius: 8px; }
+
 
 .titlebar,
 .dialog-head {
@@ -897,7 +981,6 @@ svg.packet-route {
   box-shadow: none;
   font-size: 0;
 }
-
 /* ---------- Dialogs and transient UI ---------- */
 .dialog {
   border: 1px solid rgba(35, 39, 45, 0.42);
@@ -1287,6 +1370,7 @@ svg.packet-route {
   color: #177bc8;
   font-size: 18px;
 }
+
 .about-card {
   border-color: rgba(42, 46, 53, 0.16);
   border-radius: 10px;
@@ -1408,7 +1492,6 @@ svg.packet-route {
     min-height: 390px;
     resize: none;
   }
-  .titlebar { grid-template-columns: 78px minmax(0, 1fr) 78px; padding-inline: 9px; }
   .window-body { grid-template-columns: 122px minmax(310px, 1fr); }
   .tool-sidebar { padding: 9px 7px; }
   .device-grid { grid-template-columns: 1fr; }
@@ -1452,8 +1535,7 @@ svg.packet-route {
   .menu-btn[data-menu="view"],
   .menu-btn[data-menu="network"],
   .menu-btn[data-menu="help"] { display: none; }
-  .user-btn { max-width: 34px; font-size: 0; }
-  .user-btn::before { content: "👤"; font-size: 12px; }
+  .menu-separator { display: none; }
   .wifi-status { max-width: 31px; overflow: hidden; white-space: nowrap; font-size: 0; }
   .wifi-status::before { content: "◔"; font-size: 12px; }
   .clock { display: none; }
