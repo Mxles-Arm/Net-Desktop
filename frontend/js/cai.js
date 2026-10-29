@@ -258,9 +258,22 @@
     const scene = w.el.querySelector(".canvas-scene");
     const nodes = path.map((id) => w.nodes.find((n) => n.id === id)).filter(Boolean);
     if (!nodes.length) return;
+    const route = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const points = nodes
+      .map((n) => {
+        const p = center(n);
+        return `${p.x},${p.y}`;
+      })
+      .join(" ");
+    route.classList.add("packet-route");
+    route.setAttribute("viewBox", `0 0 ${scene.clientWidth} ${scene.clientHeight}`);
+    route.setAttribute("preserveAspectRatio", "none");
+    route.innerHTML = `<polyline class="packet-route-glow" points="${points}"></polyline><polyline class="packet-route-flow" points="${points}"></polyline>`;
+    scene.appendChild(route);
     const env = document.createElement("div");
     env.className = "packet packet-hop";
-    env.textContent = "✉";
+    env.innerHTML = '<span class="packet-symbol">✉</span><span class="packet-label">กำลังส่ง</span>';
+    const label = env.querySelector(".packet-label");
     const place = (n) => {
       const p = center(n);
       env.style.left = p.x + "px";
@@ -268,18 +281,31 @@
     };
     place(nodes[0]);
     scene.appendChild(env);
+    flash(w, [nodes[0].id]);
     for (let i = 1; i < nodes.length; i++) {
-      await sleep(60);
+      label.textContent = `ฮอป ${i} / ${nodes.length - 1}`;
+      env.classList.add("packet-moving");
+      await sleep(140);
       place(nodes[i]);
-      await sleep(480);
+      await sleep(700);
+      env.classList.remove("packet-moving");
       flash(w, [nodes[i].id]);
     }
     if (!ok) {
       env.classList.add("packet-fail");
-      env.textContent = "✕";
-      await sleep(900);
-    } else await sleep(250);
+      env.querySelector(".packet-symbol").textContent = "✕";
+      label.textContent = "ส่งไม่สำเร็จ";
+      await sleep(1000);
+    } else {
+      env.classList.add("packet-success");
+      env.querySelector(".packet-symbol").textContent = "✓";
+      label.textContent = "ถึงปลายทางแล้ว";
+      await sleep(650);
+    }
     env.remove();
+    route.classList.add("packet-route-out");
+    await sleep(220);
+    route.remove();
   }
   async function sendPacket(w, a, b) {
     let res;

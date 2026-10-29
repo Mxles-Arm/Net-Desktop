@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Net Desktop ห้องทดลองจำลองเครือข่าย LAN และ Wi-Fi ภายในห้องเรียน">
 <title>Net Desktop — Classroom Network Simulator</title>
-<link rel="icon" href="assets/cai-assistant-mascot-v3.png">
+<link rel="icon" href="assets/dock-assistant-yosemite.png">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/cai.css">
+<link rel="stylesheet" href="css/yosemite.css">
 </head>
-<body>
+<body class="yosemite-theme">
 <div class="desktop" id="desktop">
 
 <!-- Menu bar -->
@@ -43,26 +44,26 @@
 
 <!-- Desktop icons -->
 <section class="desktop-icons">
-  <button class="desk-icon" data-open="workspace"><span class="icon workspace-icon"></span>New Workspace</button>
-  <button class="desk-icon" data-action="help"><span class="icon help-icon">?</span>Help</button>
+  <button class="desk-icon" data-open="workspace"><span class="icon workspace-icon"></span>Workspace ใหม่</button>
+  <button class="desk-icon" data-action="help"><span class="icon help-icon">?</span>วิธีใช้</button>
 </section>
 <div class="window-layer" id="windowLayer"></div>
 
 <!-- Dock -->
 <div class="dock-wrap"><nav class="dock">
-  <button class="dock-item" id="assistantDock" data-tip="CAI Assistant (ขอคำใบ้)"><span class="dock-icon mascot"></span></button>
-  <button class="dock-item" data-dock="encyclopedia" data-tip="Net Encyclopedia"><span class="dock-icon safari-app"></span></button>
+  <button class="dock-item" id="assistantDock" data-tip="CAI Assistant (ขอคำใบ้)" aria-label="CAI Assistant ขอคำใบ้"><span class="dock-icon mascot" aria-hidden="true"></span></button>
+  <button class="dock-item" data-dock="encyclopedia" data-tip="Net Encyclopedia" aria-label="เปิดสารานุกรมเครือข่าย"><span class="dock-icon safari-app" aria-hidden="true"></span></button>
   <span class="dock-sep"></span>
-  <button class="dock-item" data-dock="workspace" data-tip="Workspaces"><span class="dock-icon app-icon workspace-app">▣</span></button>
-  <button class="dock-item" data-dock="lessons" data-tip="Mission Control"><span class="dock-icon app-icon lesson-app">✎</span></button>
-  <button class="dock-item" data-dock="files" data-tip="Finder (งานที่บันทึก)"><span class="dock-icon app-icon files-app">▤</span></button>
-  <button class="dock-item" data-dock="utility" data-tip="Network Utility"><span class="dock-icon app-icon utility-app">⌖</span></button>
-  <button class="dock-item" data-dock="terminal" data-tip="Terminal"><span class="dock-icon app-icon terminal-app">&gt;_</span></button>
-  <button class="dock-item" data-dock="settings" data-tip="Settings"><span class="dock-icon app-icon settings-app">⚙</span></button>
+  <button class="dock-item" data-dock="workspace" data-tip="Workspaces" aria-label="เปิด Workspace"><span class="dock-icon app-icon workspace-app" aria-hidden="true">▣</span></button>
+  <button class="dock-item" data-dock="lessons" data-tip="Mission Control" aria-label="เปิด Mission Control"><span class="dock-icon app-icon lesson-app" aria-hidden="true">✎</span></button>
+  <button class="dock-item" data-dock="files" data-tip="Finder (งานที่บันทึก)" aria-label="เปิด Finder งานที่บันทึก"><span class="dock-icon app-icon files-app" aria-hidden="true">▤</span></button>
+  <button class="dock-item" data-dock="utility" data-tip="Network Utility" aria-label="เปิด Network Utility"><span class="dock-icon app-icon utility-app" aria-hidden="true">⌖</span></button>
+  <button class="dock-item" data-dock="terminal" data-tip="Terminal" aria-label="เปิด Terminal"><span class="dock-icon app-icon terminal-app" aria-hidden="true">&gt;_</span></button>
+  <button class="dock-item" data-dock="settings" data-tip="Settings" aria-label="เปิด Settings"><span class="dock-icon app-icon settings-app" aria-hidden="true">⚙</span></button>
   <span class="dock-sep"></span>
   <div class="minimized-area" id="minimizedArea"></div>
   <span class="dock-sep"></span>
-  <button class="dock-item" data-dock="trash" data-tip="Trash"><span class="dock-icon app-icon trash-app">⌫</span></button>
+  <button class="dock-item" data-dock="trash" data-tip="Trash" aria-label="เปิด Trash"><span class="dock-icon app-icon trash-app" aria-hidden="true">⌫</span></button>
 </nav></div>
 
 <dialog class="dialog" id="dialog"><div class="dialog-head" id="dialogTitle">Net Desktop</div><div class="dialog-body" id="dialogBody"></div></dialog>

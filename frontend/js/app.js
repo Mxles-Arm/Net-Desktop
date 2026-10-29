@@ -96,7 +96,33 @@ function newWorkspace(saved) {
   el.dataset.id = id;
   el.style.left = 70 + offset + "px";
   el.style.top = 35 + offset + "px";
-  el.innerHTML = `<header class="titlebar"><div class="traffic"><button class="close"></button><button class="min"></button><button class="max"></button></div><div class="window-title">${esc(state.name)}</div><div class="window-state"><button class="test-window">ทดสอบเครือข่าย</button><button class="test-window mission-check" hidden>🎯 ตรวจภารกิจ</button></div></header><div class="window-body"><aside class="tool-sidebar"><div class="side-heading">อุปกรณ์</div><div class="device-grid"><button class="side-device" draggable="true" data-type="router"><span class="mini-product"></span>Router</button><button class="side-device" draggable="true" data-type="switch"><span class="mini-product"></span>Switch</button><button class="side-device" draggable="true" data-type="pc"><span class="mini-product"></span>Computer</button><button class="side-device" draggable="true" data-type="laptop"><span class="mini-product"></span>Notebook</button><button class="side-device" draggable="true" data-type="server"><span class="mini-product"></span>Server</button><button class="side-device" draggable="true" data-type="access"><span class="mini-product"></span>Access Point</button></div><div class="side-heading" style="margin-top:12px">เครื่องมือ</div><div class="side-tools"><button class="side-tool active" data-tool="select">↖ เลือกและย้าย</button><button class="side-tool" data-tool="wire">⌁ เชื่อมสาย</button><button class="side-tool" data-tool="wifi">◔ เชื่อม Wi-Fi</button><button class="side-tool" data-wifi-settings>⚙ ตั้งค่า Wi-Fi</button><button class="side-tool" data-tool="note">▰ โน้ตข้อความ</button><button class="side-tool" data-tool="marker">✎ มาร์คเกอร์</button><button class="side-tool" data-tool="packet">✉ ส่ง Packet</button><button class="side-tool" data-tool="undo">↶ ย้อนกลับ</button></div></aside><main class="canvas"><div class="canvas-scene"><svg class="wires"></svg><svg class="marker-layer"></svg></div><div class="canvas-tip">ลากพอร์ตสีฟ้าไปยังอุปกรณ์ปลายทาง</div></main><aside class="inspector"><h2 class="panel-title">Network Overview</h2><div class="overview"><div class="stat"><strong data-count="devices">0</strong><span>อุปกรณ์</span></div><div class="stat"><strong data-count="links">0</strong><span>การเชื่อมต่อ</span></div></div><div class="net-status" data-net-status></div><div class="mission-panel" hidden></div><div class="rule"></div><h2 class="panel-title">Inspector</h2><div class="empty">เลือกอุปกรณ์เพื่อแก้ไขและปรับขนาด</div><div class="selected"><div class="preview-device"><div class="product"></div></div><div class="field"><label>ชื่ออุปกรณ์</label><input data-field="name"></div><div class="field" data-for="host"><label>การรับ IP</label><select data-field="dhcp"><option value="manual">กำหนดเอง (Manual)</option><option value="dhcp">อัตโนมัติ (DHCP)</option></select></div><div class="field"><label>IP Address</label><input data-field="ip" placeholder="เช่น 192.168.1.20"></div><div class="field"><label>Subnet Mask</label><input data-field="mask" placeholder="255.255.255.0"></div><div class="field" data-for="host"><label>Default Gateway</label><input data-field="gateway" placeholder="IP ของ Router"></div><div class="field" data-for="host"><label>DNS Server</label><input data-field="dns" placeholder="IP ของ Router"></div><div class="field" data-for="router"><label>DHCP Server (แจก IP อัตโนมัติ)</label><select data-field="dhcpServer"><option value="on">เปิด</option><option value="off">ปิด</option></select></div><div class="device-status" data-device-status></div><div class="size-row"><button class="small-btn" data-size="down">ย่อขนาด</button><button class="small-btn" data-size="up">ขยายขนาด</button></div><button class="delete">ลบอุปกรณ์</button></div></aside></div>`;
+  el.innerHTML = `<header class="titlebar"><div class="traffic"><button class="close"></button><button class="min"></button><button class="max"></button></div><div class="window-title">${esc(state.name)}</div><div class="window-state"><button class="test-window">ทดสอบเครือข่าย</button><button class="test-window mission-check" hidden>🎯 ตรวจภารกิจ</button></div></header><div class="window-body"><aside class="tool-sidebar"><div class="side-heading">อุปกรณ์</div><div class="device-grid"><button class="side-device" draggable="true" data-type="router"><span class="mini-product"></span>Router</button><button class="side-device" draggable="true" data-type="switch"><span class="mini-product"></span>Switch</button><button class="side-device" draggable="true" data-type="pc"><span class="mini-product"></span>Computer</button><button class="side-device" draggable="true" data-type="laptop"><span class="mini-product"></span>Notebook</button><button class="side-device" draggable="true" data-type="server"><span class="mini-product"></span>Server</button><button class="side-device" draggable="true" data-type="access"><span class="mini-product"></span>Access Point</button></div><div class="side-heading tool-heading">เครื่องมือ</div><div class="side-tools"><div class="tool-cluster"><span class="tool-cluster-title">จัดวางและเชื่อมต่อ</span><button class="side-tool active" data-tool="select"><span class="tool-glyph" aria-hidden="true">↖</span><span class="tool-label">เลือกและย้าย</span></button><button class="side-tool" data-tool="wire"><span class="tool-glyph" aria-hidden="true">⌁</span><span class="tool-label">เชื่อมสาย LAN</span></button><button class="side-tool" data-tool="wifi"><span class="tool-glyph" aria-hidden="true">◔</span><span class="tool-label">เชื่อม Wi-Fi</span></button><button class="side-tool" data-wifi-settings><span class="tool-glyph" aria-hidden="true">⚙</span><span class="tool-label">ตั้งค่า Wi-Fi</span></button></div><div class="tool-cluster compact-tools"><span class="tool-cluster-title">อธิบายแผนผัง</span><button class="side-tool" data-tool="note"><span class="tool-glyph" aria-hidden="true">▰</span><span class="tool-label">โน้ต</span></button><button class="side-tool" data-tool="marker"><span class="tool-glyph" aria-hidden="true">✎</span><span class="tool-label">มาร์คเกอร์</span></button></div><div class="tool-cluster packet-cluster"><span class="tool-cluster-title">ทดสอบการสื่อสาร</span><button class="side-tool packet-tool" data-tool="packet"><span class="tool-glyph" aria-hidden="true">✉</span><span class="tool-copy"><span class="tool-label">ส่งแพ็กเก็ต</span><small>ต้นทาง → ปลายทาง</small></span><span class="tool-badge">TEST</span></button></div><button class="side-tool undo-tool" data-tool="undo"><span class="tool-glyph" aria-hidden="true">↶</span><span class="tool-label">ย้อนกลับ</span></button></div></aside><main class="canvas"><div class="canvas-scene"><svg class="wires"></svg><svg class="marker-layer"></svg></div><div class="canvas-tip" data-step="พร้อมใช้งาน">ลากพอร์ตสีฟ้าไปยังอุปกรณ์ปลายทาง</div></main><aside class="inspector"><h2 class="panel-title">Network Overview</h2><div class="overview"><div class="stat"><strong data-count="devices">0</strong><span>อุปกรณ์</span></div><div class="stat"><strong data-count="links">0</strong><span>การเชื่อมต่อ</span></div></div><div class="net-status" data-net-status></div><div class="mission-panel" hidden></div><div class="rule"></div><h2 class="panel-title">Inspector</h2><div class="empty">เลือกอุปกรณ์เพื่อแก้ไขและปรับขนาด</div><div class="selected"><div class="preview-device"><div class="product"></div></div><div class="field"><label>ชื่ออุปกรณ์</label><input data-field="name"></div><div class="field" data-for="host"><label>การรับ IP</label><select data-field="dhcp"><option value="manual">กำหนดเอง (Manual)</option><option value="dhcp">อัตโนมัติ (DHCP)</option></select></div><div class="field"><label>IP Address</label><input data-field="ip" placeholder="เช่น 192.168.1.20"></div><div class="field"><label>Subnet Mask</label><input data-field="mask" placeholder="255.255.255.0"></div><div class="field" data-for="host"><label>Default Gateway</label><input data-field="gateway" placeholder="IP ของ Router"></div><div class="field" data-for="host"><label>DNS Server</label><input data-field="dns" placeholder="IP ของ Router"></div><div class="field" data-for="router"><label>DHCP Server (แจก IP อัตโนมัติ)</label><select data-field="dhcpServer"><option value="on">เปิด</option><option value="off">ปิด</option></select></div><div class="device-status" data-device-status></div><div class="size-row"><button class="small-btn" data-size="down">ย่อขนาด</button><button class="small-btn" data-size="up">ขยายขนาด</button></div><button class="delete">ลบอุปกรณ์</button></div></aside></div>`;
+  [
+    [".close", "ปิดหน้าต่าง"],
+    [".min", "ย่อหน้าต่างลง Dock"],
+    [".max", "ขยายหรือคืนขนาดหน้าต่าง"],
+  ].forEach(([selector, label]) => {
+    const button = el.querySelector(selector);
+    button.setAttribute("aria-label", label);
+    button.title = label;
+  });
+  const panelTitles = el.querySelectorAll(".panel-title");
+  panelTitles[0].textContent = "ภาพรวมเครือข่าย";
+  panelTitles[1].textContent = "ตัวตรวจสอบอุปกรณ์";
+  el.querySelectorAll(".side-tool").forEach((button) => {
+    if (button.querySelector(".tool-glyph")) return;
+    const text = button.textContent.trim();
+    const separator = text.indexOf(" ");
+    if (separator < 0) return;
+    const glyph = document.createElement("span");
+    glyph.className = "tool-glyph";
+    glyph.setAttribute("aria-hidden", "true");
+    glyph.textContent = text.slice(0, separator);
+    const label = document.createElement("span");
+    label.className = "tool-label";
+    label.textContent = text.slice(separator + 1);
+    button.replaceChildren(glyph, label);
+  });
   layer.appendChild(el);
   state.el = el;
   windows.push(state);
@@ -495,11 +521,12 @@ function handlePacketClick(w, n) {
     packetTransfer = { w, n };
     w.packetFrom = n.id;
     w.el.querySelectorAll(".node").forEach((x) => x.classList.toggle("packet-source", x.dataset.id === n.id));
-    windows.forEach(
-      (v) =>
-        (v.el.querySelector(".canvas-tip").textContent =
-          `ต้นทาง: ${n.name} (${w.name}) — คลิกปลายทางใน Workspace ใดก็ได้`),
-    );
+    windows.forEach((v) => {
+      const tip = v.el.querySelector(".canvas-tip");
+      v.el.classList.add("packet-targeting");
+      tip.dataset.step = "2 จาก 2 · เลือกปลายทาง";
+      tip.textContent = `ต้นทาง: ${n.name} (${w.name}) — คลิกอุปกรณ์ปลายทาง`;
+    });
     toast("เลือกอุปกรณ์ปลายทางในหน้าต่างเดิมหรือ Workspace อื่น");
   } else {
     const source = packetTransfer;
@@ -507,9 +534,11 @@ function handlePacketClick(w, n) {
     packetTransfer = null;
     source.w.packetFrom = null;
     windows.forEach((v) => {
+      v.el.classList.remove("packet-mode", "packet-targeting");
       v.el.querySelectorAll(".node").forEach((x) => x.classList.remove("packet-source"));
-      v.el.querySelector(".canvas-tip").textContent =
-        "เลือกเครื่องมือ Send Packet เพื่อทดสอบในหน้าต่างเดียวกันหรือข้าม Workspace";
+      const tip = v.el.querySelector(".canvas-tip");
+      tip.dataset.step = "พร้อมใช้งาน";
+      tip.textContent = "เลือกเครื่องมือส่งแพ็กเก็ตเพื่อทดสอบการสื่อสาร";
     });
     if (source.w === w) (window.CAI ? window.CAI.sendPacket(w, source.n, n) : animatePacket(w, source.n, n));
     else animateCrossPacket(source.w, source.n, w, n);
@@ -520,9 +549,15 @@ function animatePacket(w, a, b) {
   const scene = w.el.querySelector(".canvas-scene"),
     p = center(a),
     q = center(b),
+    route = document.createElementNS("http://www.w3.org/2000/svg", "svg"),
     env = document.createElement("div");
-  env.className = "packet";
-  env.textContent = "✉";
+  route.classList.add("packet-route");
+  route.setAttribute("viewBox", `0 0 ${scene.clientWidth} ${scene.clientHeight}`);
+  route.setAttribute("preserveAspectRatio", "none");
+  route.innerHTML = `<polyline class="packet-route-glow" points="${p.x},${p.y} ${q.x},${q.y}"></polyline><polyline class="packet-route-flow" points="${p.x},${p.y} ${q.x},${q.y}"></polyline>`;
+  scene.appendChild(route);
+  env.className = "packet packet-hop packet-moving";
+  env.innerHTML = '<span class="packet-symbol">✉</span><span class="packet-label">กำลังส่ง</span>';
   env.style.left = p.x + "px";
   env.style.top = p.y + "px";
   scene.appendChild(env);
@@ -533,14 +568,22 @@ function animatePacket(w, a, b) {
     }),
   );
   setTimeout(() => {
-    env.remove();
+    env.classList.remove("packet-moving");
+    env.classList.add("packet-success");
+    env.querySelector(".packet-symbol").textContent = "✓";
+    env.querySelector(".packet-label").textContent = "ถึงปลายทางแล้ว";
     const bEl = w.el.querySelector(`.node[data-id="${b.id}"]`);
     if (bEl) {
       bEl.classList.add("pulse-node");
       setTimeout(() => bEl.classList.remove("pulse-node"), 1100);
     }
     toast(`ส่ง Packet จาก ${a.name} ไป ${b.name} สำเร็จ`);
-  }, 950);
+    setTimeout(() => {
+      env.remove();
+      route.classList.add("packet-route-out");
+      setTimeout(() => route.remove(), 220);
+    }, 650);
+  }, 1050);
 }
 function animateCrossPacket(fromW, a, toW, b) {
   const aEl = fromW.el.querySelector(`.node[data-id="${a.id}"]`),
@@ -549,21 +592,35 @@ function animateCrossPacket(fromW, a, toW, b) {
   const dr = desktop.getBoundingClientRect(),
     ar = aEl.getBoundingClientRect(),
     br = bEl.getBoundingClientRect(),
-    env = document.createElement("div");
+    env = document.createElement("div"),
+    route = document.createElement("div"),
+    startX = ar.left - dr.left + ar.width / 2,
+    startY = ar.top - dr.top + ar.height / 2,
+    endX = br.left - dr.left + br.width / 2,
+    endY = br.top - dr.top + br.height / 2,
+    distance = Math.hypot(endX - startX, endY - startY),
+    angle = Math.atan2(endY - startY, endX - startX) * (180 / Math.PI);
+  route.className = "cross-packet-route";
+  route.style.left = startX + "px";
+  route.style.top = startY + "px";
+  route.style.width = distance + "px";
+  route.style.transform = `rotate(${angle}deg)`;
+  desktop.appendChild(route);
   env.className = "cross-packet";
   env.textContent = "✉";
-  env.style.left = ar.left - dr.left + ar.width / 2 - 12 + "px";
-  env.style.top = ar.top - dr.top + ar.height / 2 - 12 + "px";
+  env.style.left = startX - 12 + "px";
+  env.style.top = startY - 12 + "px";
   desktop.appendChild(env);
   requestAnimationFrame(() =>
     requestAnimationFrame(() => {
-      env.style.left = br.left - dr.left + br.width / 2 - 12 + "px";
-      env.style.top = br.top - dr.top + br.height / 2 - 12 + "px";
+      env.style.left = endX - 12 + "px";
+      env.style.top = endY - 12 + "px";
       env.style.transform = "rotate(8deg) scale(1.15)";
     }),
   );
   setTimeout(() => {
     env.remove();
+    route.remove();
     focusWindow(toW);
     bEl.classList.add("pulse-node");
     setTimeout(() => bEl.classList.remove("pulse-node"), 1100);
@@ -572,7 +629,7 @@ function animateCrossPacket(fromW, a, toW, b) {
       "ส่ง Packet ไม่สำเร็จ",
       `<p><b>${esc(a.name)}</b> [${esc(fromW.name)}] → <b>${esc(b.name)}</b> [${esc(toW.name)}]</p><p>แต่ละ Workspace คือเครือข่ายแยกกัน ไม่มีสายหรือ Wi-Fi เชื่อมถึงกัน Packet จึงไปไม่ถึงปลายทาง</p><p class="hint-line">💡 ลองส่ง Packet ระหว่างเครื่องใน Workspace เดียวกัน</p>`,
     );
-  }, 1200);
+  }, 1550);
 }
 function handleWifiClick(w, n) {
   if (!w.wifiFrom) {
@@ -725,12 +782,9 @@ function updateInspector(w) {
   }
   empty.style.display = "none";
   box.classList.add("show");
-  const order = ["router", "switch", "pc", "laptop", "server", "access"],
-    i = order.indexOf(n.type),
-    col = i % 3,
-    row = Math.floor(i / 3);
-  box.querySelector(".product").style.backgroundPosition =
-    `${col === 0 ? "0" : col === 1 ? "50%" : "100%"} ${row === 0 ? "0" : "100%"}`;
+  const preview = box.querySelector(".preview-device");
+  preview.dataset.type = n.type;
+  box.querySelector(".product").style.backgroundPosition = "center";
   box.querySelector("[data-field=name]").value = n.name;
   const st = w.analysis?.devices.find((x) => x.id === n.id),
     isHost = HOST_TYPES.includes(n.type),
@@ -768,15 +822,19 @@ function toolCommand(w, cmd) {
     w.packetFrom = null;
     w.wifiFrom = null;
     w.el.querySelectorAll("[data-tool]").forEach((b) => b.classList.toggle("active", b.dataset.tool === cmd));
+    w.el.classList.toggle("packet-mode", cmd === "packet");
+    w.el.classList.remove("packet-targeting");
     const tips = {
       wire: "ลากจากพอร์ตสีฟ้าเพื่อเชื่อมสาย",
       wifi: "คลิกอุปกรณ์ต้นทาง แล้วคลิกปลายทางเพื่อเชื่อม Wi-Fi",
       note: "คลิกพื้นที่เพื่อวางโน้ต",
       marker: "ลากบนพื้นที่เพื่อวาดมาร์คเกอร์",
-      packet: "เลือกเครื่องต้นทางและเครื่องปลายทาง",
+      packet: "คลิกอุปกรณ์ต้นทางเพื่อเริ่มส่งแพ็กเก็ต",
       select: "โหมดเลือกและย้าย",
     };
-    w.el.querySelector(".canvas-tip").textContent = tips[cmd] || tips.select;
+    const tip = w.el.querySelector(".canvas-tip");
+    tip.dataset.step = cmd === "packet" ? "1 จาก 2 · เลือกต้นทาง" : "เครื่องมือที่เลือก";
+    tip.textContent = tips[cmd] || tips.select;
     toast(tips[cmd] || tips.select);
   }
 }
