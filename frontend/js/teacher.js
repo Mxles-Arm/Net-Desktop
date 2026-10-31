@@ -29,16 +29,48 @@
     $("#tPass").focus();
   }
 
-  async function load() {
+  // Returns true when the report was loaded. With keepReport, a network error leaves the current
+  // report on screen (used by the refresh button); a lost session always goes back to sign-in.
+  async function load({ keepReport = false } = {}) {
     try {
       const data = await call("GET", "/api/teacher/summary");
       $("#loginCard").hidden = true;
       $("#report").hidden = false;
       $("#barActions").hidden = false;
       render(data);
+      return true;
     } catch (e) {
-      showLogin(e.status === 401 || e.status === 403 ? "" : e.message);
+      const signedOut = e.status === 401 || e.status === 403;
+      if (signedOut || !keepReport) showLogin(signedOut ? "" : e.message);
+      return false;
     }
+  }
+
+  // Refresh button: spinning icon while loading, then a short "updated" (or "failed") state.
+  async function refresh() {
+    const btn = $("#refreshBtn");
+    if (btn.classList.contains("loading")) return;
+    clearTimeout(btn.resetTimer);
+    btn.classList.remove("done", "failed");
+    btn.classList.add("loading");
+    btn.disabled = true;
+    btn.querySelector(".r-label").textContent = "กำลังโหลด…";
+    // Keep the spinner up long enough to be seen even when the server answers instantly.
+    const [ok] = await Promise.all([load({ keepReport: true }), new Promise((r) => setTimeout(r, 450))]);
+    btn.classList.remove("loading");
+    btn.disabled = false;
+    btn.classList.add(ok ? "done" : "failed");
+    btn.querySelector(".r-label").textContent = ok ? "อัปเดตแล้ว" : "โหลดไม่สำเร็จ";
+    if (ok) {
+      const report = $("#report");
+      report.classList.remove("just-updated");
+      void report.offsetWidth; // restart the fade
+      report.classList.add("just-updated");
+    }
+    btn.resetTimer = setTimeout(() => {
+      btn.classList.remove("done", "failed");
+      btn.querySelector(".r-label").textContent = "รีเฟรช";
+    }, 1600);
   }
 
   function kpi(value, label, cls = "") {
@@ -135,7 +167,7 @@
       $("#loginError").textContent = err.message;
     }
   };
-  $("#refreshBtn").onclick = load;
+  $("#refreshBtn").onclick = refresh;
   $("#logoutBtn").onclick = async () => {
     await call("POST", "/api/auth/logout").catch(() => {});
     showLogin();

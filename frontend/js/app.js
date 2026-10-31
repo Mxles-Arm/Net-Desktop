@@ -124,6 +124,7 @@ function newWorkspace(saved) {
     button.replaceChildren(glyph, label);
   });
   layer.appendChild(el);
+  fitInLayer(el);
   state.el = el;
   windows.push(state);
   bindWorkspace(state);
@@ -132,6 +133,16 @@ function newWorkspace(saved) {
   syncMinimizedDock();
   return state;
 }
+// On small screens (e.g. 1024px) a new window's default position pushes its right edge, and the
+// title-bar buttons, off screen: narrow it (CSS min-width still applies, so the cascade offset is kept),
+// then slide it left if it still does not fit.
+function fitInLayer(el, margin = 8) {
+  const room = layer.clientWidth - margin;
+  if (el.offsetLeft + el.offsetWidth <= room) return;
+  el.style.width = room - el.offsetLeft + "px";
+  if (el.offsetLeft + el.offsetWidth > room) el.style.left = Math.max(margin, room - el.offsetWidth) + "px";
+}
+
 function bindWorkspace(w) {
   const el = w.el,
     bar = el.querySelector(".titlebar");

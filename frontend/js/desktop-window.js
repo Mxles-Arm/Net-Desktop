@@ -57,6 +57,7 @@
     const kind = icon === "browser" ? "KNOWLEDGE" : icon === "navi" ? "ASSISTANT" : "APPLICATION";
     el.innerHTML = `<header class="titlebar"><div class="traffic"><button class="close" aria-label="ปิดหน้าต่าง"></button><button class="min" aria-label="ย่อหน้าต่างลง Dock"></button><button class="max" aria-label="ขยายหรือคืนขนาดหน้าต่าง"></button></div><div class="window-title">${escapeHtml(title)}</div><div class="window-state"><span class="app-window-kind">${kind}</span></div></header><div class="desktop-app-body">${content}</div>`;
     layer.appendChild(el);
+    fitInLayer(el); // from app.js
 
     const app = { id, title, icon, el, body: el.querySelector(".desktop-app-body"), minimized: false };
     apps.push(app);

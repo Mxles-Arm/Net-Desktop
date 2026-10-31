@@ -275,9 +275,12 @@
   box-shadow: inset 0 1px rgba(255, 255, 255, 0.9);
 }
 
-.titlebar { grid-template-columns: 108px 1fr 108px; padding: 0 12px; }
+/* Side columns share the leftover space equally so the title stays centred, but grow to fit their
+   buttons (a mission window shows two: "ทดสอบเครือข่าย" and "🎯 ตรวจภารกิจ"); the title shrinks instead. */
+.titlebar { grid-template-columns: minmax(max-content, 1fr) minmax(0, max-content) minmax(max-content, 1fr); column-gap: 10px; padding: 0 12px; }
 .window-title { color: #35363a; font-size: 12px; font-weight: 600; }
-.window-state { color: #777a80; }
+.window-state { display: flex; justify-content: flex-end; align-items: center; gap: 6px; flex-wrap: nowrap; white-space: nowrap; color: #777a80; }
+.window-state .mission-check { margin-left: 0; }
 .traffic { gap: 8px; }
 .traffic button {
   width: 13px;
@@ -489,10 +492,14 @@
   font-size: 10px;
   font-weight: 700;
 }
+/* Let the label and hint shrink (with "…") instead of running under the TEST badge. */
+.tool-copy > * { min-width: 0; }
 .tool-copy small {
   color: #637686;
   font-size: 7px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .tool-badge {
   align-self: start;
@@ -1543,7 +1550,7 @@ svg.packet-route {
   .desk-icon { width: 58px; font-size: 9px; }
   .desk-icon .icon { width: 48px; height: 48px; }
   .workspace:not(.maximized) { height: calc(100vh - 72px) !important; }
-  .titlebar { grid-template-columns: 70px minmax(0, 1fr) 44px; }
+  .titlebar { grid-template-columns: max-content minmax(0, 1fr) max-content; }
   .window-body { grid-template-columns: 104px minmax(230px, 1fr); }
   .tool-sidebar { padding-inline: 5px; }
   .side-heading { font-size: 8px; }
@@ -1600,6 +1607,8 @@ svg.packet-route {
   .finder-row button,
   .nu-tabs button,
   .nu-form button { min-height: 40px; }
+  /* Title-bar buttons must still fit inside the window's title bar. */
+  .window-state .test-window { min-height: 30px; }
   .dock-item:hover { transform: none; }
   .port { width: 16px; height: 16px; right: -9px; top: calc(50% - 8px); }
 }

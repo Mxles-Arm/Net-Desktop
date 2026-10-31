@@ -82,6 +82,22 @@
 .teacher-page .bar .btn:active { background: #dcdcdf; }
 .teacher-page #logoutBtn { color: #d0342c; }
 
+/* Refresh button states (js/teacher.js refresh()) */
+.teacher-page #refreshBtn { display: inline-flex; align-items: center; gap: 4px; min-width: 104px; justify-content: center; }
+.teacher-page #refreshBtn .r-icon { display: inline-block; transition: transform 0.3s ease; }
+.teacher-page #refreshBtn:hover .r-icon { transform: rotate(-30deg); }
+.teacher-page #refreshBtn.loading { cursor: progress; opacity: 0.85; }
+.teacher-page #refreshBtn.loading .r-icon { animation: t-spin 0.7s linear infinite; }
+.teacher-page #refreshBtn.done { color: #1f9a3a; }
+.teacher-page #refreshBtn.done .r-icon { animation: t-pop 0.35s ease; }
+.teacher-page #refreshBtn.failed { color: #d0342c; }
+@keyframes t-spin { to { transform: rotate(360deg); } }
+@keyframes t-pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+/* A light flash on the report so the new numbers are noticed. */
+.teacher-page #report.just-updated .kpi,
+.teacher-page #report.just-updated .card { animation: t-updated 0.7s ease; }
+@keyframes t-updated { 0% { box-shadow: 0 0 0 3px rgba(22, 135, 248, 0.35); } 100% { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); } }
+
 /* ---------- Content ---------- */
 .teacher-page main { max-width: none; padding: 18px 20px 26px; }
 .teacher-page .kpis { gap: 10px; }
