@@ -69,6 +69,17 @@ test('duplicate IP is detected and ping reports a conflict', () => {
   assert.equal(engine.ping(ws, 'l1', '192.168.1.11').code, 'IP_CONFLICT');
 });
 
+test('pinging another device that shares the source IP is a conflict, not a success', () => {
+  const ws = lan({ p1: { ip: '192.168.1.1' } }); // PC-01 copies the router's IP
+  const r = engine.ping(ws, 'p1', 'r1', 1);
+  assert.equal(r.ok, false);
+  assert.equal(r.code, 'IP_CONFLICT');
+  assert.match(r.message, /ซ้ำ/);
+  assert.equal(engine.ping(ws, 'r1', 'p1', 1).ok, false);
+  // Pinging your own device is still fine.
+  assert.equal(engine.ping(ws, 'p1', 'p1', 1).ok, true);
+});
+
 test('invalid IP, mask, reserved address and gateway in another subnet', () => {
   assert.ok(codes(engine.analyze(lan({ p1: { ip: '192.168.1.300' } }))).includes('INVALID_IP'));
   assert.ok(codes(engine.analyze(lan({ p1: { mask: '255.0.255.0' } }))).includes('INVALID_MASK'));

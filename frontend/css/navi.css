@@ -53,7 +53,8 @@
     radial-gradient(circle at 12% 18%, rgba(22, 135, 248, 0.055), transparent 28%),
     radial-gradient(circle at 88% 82%, rgba(92, 76, 190, 0.045), transparent 27%);
 }
-.navi-message { max-width: 82%; display: grid; gap: 4px; }
+/* flex-shrink: 0 keeps long, multi-line answers from being squeezed into each other when the chat scrolls. */
+.navi-message { max-width: 82%; display: grid; gap: 4px; flex-shrink: 0; }
 .navi-message > div {
   padding: 9px 12px;
   border: 1px solid rgba(43, 51, 60, 0.12);

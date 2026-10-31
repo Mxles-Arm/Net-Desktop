@@ -522,6 +522,15 @@ function ping(workspace, fromRef, target, count = 4, prebuilt) {
       return { ok: false, code: 'DST_NO_IP', lines: [`${targetDevice.name} ไม่มี IP Address`], path: [], from: from.id, to: targetDevice.id,
         message: `${targetDevice.name} ยังไม่มี IP Address จึงรับ Packet ไม่ได้`, hint: `ตั้ง IP ให้ ${targetDevice.name} หรือเปลี่ยนเป็น DHCP` };
     }
+    // A different device with the source's own IP: the packet never leaves the source (IP conflict).
+    if (targetDevice.id !== from.id && tc.ip === net.config.get(from.id).ip) {
+      const conflict = net.nodes.filter((n) => net.config.get(n.id).ip === tc.ip);
+      return {
+        ok: false, code: 'IP_CONFLICT', lines: [`Pinging ${tc.ip} with 32 bytes of data:`, `Reply from ${tc.ip}: (ตอบกลับจากเครื่องตัวเอง ไม่ใช่ ${targetDevice.name})`],
+        path: [from.id], from: from.id, to: targetDevice.id, targetIp: tc.ip,
+        ...explain({ code: 'IP_CONFLICT', from, to: targetDevice, conflict }, tc.ip),
+      };
+    }
     dstIp = tc.ip;
   } else {
     const res = resolve(net, from.id, String(target || ''));
