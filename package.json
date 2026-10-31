@@ -7,7 +7,7 @@
     "node": "24.x"
   },
   "scripts": {
-    "setup": "npm --prefix backend install",
+    "setup": "cd backend && npm install",
     "start": "npm --prefix backend start",
     "test": "npm --prefix backend test"
   }
