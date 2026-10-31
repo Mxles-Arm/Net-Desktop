@@ -211,16 +211,30 @@ function bindWorkspace(w) {
   );
   el.querySelector(".delete").onclick = () => deleteSelected(w);
 }
+const dockButtonRect = (w) => document.querySelector(`#minimizedArea [data-ws-id="${w.id}"]`)?.getBoundingClientRect();
 function focusWindow(w) {
   active = w;
-  w.el.classList.remove("minimized");
+  const wasHidden = w.el.classList.contains("minimized") || w.el.classList.contains("minimizing");
+  // Restoring from the Dock: grow back out of its Dock icon (read the icon's position before it is removed).
+  const from = wasHidden ? dockButtonRect(w) : null;
+  window.WindowMotion?.cancel(w.el);
+  w.el.classList.remove("minimized", "minimizing");
   w.el.style.zIndex = ++zTop;
   syncMinimizedDock();
+  if (from) window.WindowMotion?.restore(w.el, from);
 }
 function minimizeWorkspace(w) {
-  w.el.classList.add("minimized");
-  if (active === w) active = windows.find((x) => !x.el.classList.contains("minimized") && x !== w) || null;
+  if (w.el.classList.contains("minimized") || w.el.classList.contains("minimizing")) return;
+  // Put the Dock icon in place first so the window can shrink into it, then hide the window.
+  w.el.classList.add("minimizing");
+  if (active === w) active = windows.find((x) => !x.el.classList.contains("minimized") && !x.el.classList.contains("minimizing")) || null;
   syncMinimizedDock();
+  const hide = () => {
+    w.el.classList.remove("minimizing");
+    w.el.classList.add("minimized");
+  };
+  if (window.WindowMotion) window.WindowMotion.minimize(w.el, dockButtonRect(w), hide);
+  else hide();
 }
 function closeWorkspace(w, force) {
   if (!force && w.dirty && window.CAI) return window.CAI.confirmClose(w);
@@ -234,10 +248,11 @@ function syncMinimizedDock() {
   const area = document.querySelector("#minimizedArea");
   area.innerHTML = "";
   windows
-    .filter((w) => w.el.classList.contains("minimized"))
+    .filter((w) => w.el.classList.contains("minimized") || w.el.classList.contains("minimizing"))
     .forEach((w, i) => {
       const b = document.createElement("button");
       b.className = "minimized-app";
+      b.dataset.wsId = w.id;
       b.title = w.name;
       b.textContent = String(i + 1);
       b.onclick = () => focusWindow(w);
@@ -700,7 +715,7 @@ function showWifiPanel(w) {
 function showAboutNet() {
   showDialog(
     "About Net Desktop",
-    `<div class="about-card"><div class="about-n">N</div><div class="about-title">Net Desktop</div><div class="about-meta">Version 1.6 — Wireless Edition<br>Workspace Memory: ${windows.length} Window(s)<br>Network Engine: Classroom Simulator</div><p>© 2026 CAI Net Learning Lab</p></div>`,
+    `<div class="about-card"><div class="about-n">N</div><div class="about-title">Net Desktop</div><div class="about-meta">Version 2.0 — Navi Edition<br>Workspace Memory: ${windows.length} Window(s)<br>Network Engine: Classroom Simulator</div><p>© 2026 CAI Net Learning Lab</p></div>`,
   );
 }
 // First 192.168.1.x address not used in this workspace (Routers prefer .1).
@@ -970,7 +985,7 @@ function command(cmd) {
   if (cmd === "systemInfo")
     showDialog(
       "System Information",
-      `Net Desktop 1.6<br>Workspace ที่เปิด: ${windows.length}<br>อุปกรณ์ทั้งหมด: ${windows.reduce((n, w) => n + w.nodes.length, 0)}<br>รองรับ LAN, Wi-Fi, Packet และหลายหน้าต่าง`,
+      `Net Desktop 2.0 — Navi Edition<br>Workspace ที่เปิด: ${windows.length}<br>อุปกรณ์ทั้งหมด: ${windows.reduce((n, w) => n + w.nodes.length, 0)}<br>รองรับ LAN, Wi-Fi, Packet และหลายหน้าต่าง`,
     );
   if (cmd === "preferences") showWifiPanel(active);
   window.CAI?.command(cmd);

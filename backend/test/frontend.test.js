@@ -11,6 +11,7 @@ const read = (relative) => fs.readFileSync(path.join(ROOT, relative), 'utf8');
 test('frontend classic scripts parse and load in dependency order', () => {
   const scripts = [
     'frontend/js/api.js',
+    'frontend/js/window-motion.js',
     'frontend/js/app.js',
     'frontend/js/desktop-window.js',
     'frontend/js/knowledge-browser.js',

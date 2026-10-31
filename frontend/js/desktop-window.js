@@ -15,12 +15,33 @@
     app.el.style.zIndex = nextZ();
   }
 
+  const dockButtonRect = (app) => document.querySelector(`#minimizedArea [data-app-id="${app.id}"]`)?.getBoundingClientRect();
+
+  // Shrink into the app's Dock icon (macOS genie); the icon is added first so the window has a target.
+  function minimize(app) {
+    if (app.minimized) return;
+    app.minimized = true;
+    syncDock();
+    const hide = () => app.el.classList.add("minimized");
+    if (window.WindowMotion) window.WindowMotion.minimize(app.el, dockButtonRect(app), hide);
+    else hide();
+  }
+
+  // Grow back out of the Dock icon.
+  function restore(app) {
+    const from = app.minimized ? dockButtonRect(app) : null;
+    window.WindowMotion?.cancel(app.el);
+    app.minimized = false;
+    app.el.classList.remove("minimized");
+    focus(app);
+    syncDock();
+    if (from) window.WindowMotion?.restore(app.el, from);
+  }
+
   function open({ id, title, icon = "app", width = 860, height = 610, content = "" }) {
     const existing = apps.find((app) => app.id === id && app.el.isConnected);
     if (existing) {
-      existing.minimized = false;
-      existing.el.classList.remove("minimized");
-      focus(existing);
+      restore(existing);
       return existing;
     }
 
@@ -46,11 +67,7 @@
     };
 
     el.querySelector(".close").onclick = app.close;
-    el.querySelector(".min").onclick = () => {
-      app.minimized = true;
-      el.classList.add("minimized");
-      syncDock();
-    };
+    el.querySelector(".min").onclick = () => minimize(app);
     el.querySelector(".max").onclick = () => el.classList.toggle("maximized");
     el.addEventListener("pointerdown", () => focus(app));
 
@@ -80,14 +97,10 @@
       const button = document.createElement("button");
       button.className = "minimized-app desktop-app-minimized";
       button.dataset.appIcon = app.icon || "app";
+      button.dataset.appId = app.id;
       button.title = app.title;
       button.setAttribute("aria-label", `คืนหน้าต่าง ${app.title}`);
-      button.onclick = () => {
-        app.minimized = false;
-        app.el.classList.remove("minimized");
-        focus(app);
-        syncDock();
-      };
+      button.onclick = () => restore(app);
       area.appendChild(button);
     });
   }
