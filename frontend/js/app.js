@@ -142,6 +142,16 @@ function fitInLayer(el, margin = 8) {
   el.style.width = room - el.offsetLeft + "px";
   if (el.offsetLeft + el.offsetWidth > room) el.style.left = Math.max(margin, room - el.offsetWidth) + "px";
 }
+// Same when the browser window is made smaller after windows are already open.
+let fitTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(() => {
+    layer.querySelectorAll(".workspace, .desktop-app-window").forEach((el) => {
+      if (!el.classList.contains("maximized") && !el.classList.contains("minimized")) fitInLayer(el);
+    });
+  }, 150);
+});
 
 function bindWorkspace(w) {
   const el = w.el,
