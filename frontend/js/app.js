@@ -1096,7 +1096,8 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     command("save");
   }
-  if (e.key.toLowerCase() === "z") {
+  // In a text field Ctrl+Z undoes the typing, not the network.
+  if (e.key.toLowerCase() === "z" && !e.target.matches("input,textarea,select")) {
     e.preventDefault();
     command("undo");
   }

@@ -21,7 +21,9 @@
     setTimeout(() => element.classList.remove("pulse-node"), 2400);
   });
 
-  async function answer(workspace, user, question, hintLevel) {
+  // hintState = { key, level }: hints climb 1 → 2 → 3 while the learner asks about the same problem,
+  // and start again at level 1 when the first problem (or the workspace) changes.
+  async function answer(workspace, user, question, hintState) {
     const query = question.trim(), lower = query.toLowerCase();
     if (!query) return { text: "ลองพิมพ์สิ่งที่อยากรู้ หรือเลือกคำถามแนะนำด้านล่างได้เลยครับ" };
     if (/สวัสดี|หวัดดี|hello|hi\b/.test(lower)) return { text: `สวัสดีครับ ${user?.name || ""} ผม Navi ผู้ช่วยนำทางเครือข่าย วันนี้อยากตรวจ Workspace หรือเรียนรู้เรื่องไหนครับ` };
@@ -29,7 +31,12 @@
     if (/ตรวจ|วิเคราะห์|ปัญหา|ทำไม.*(ไม่ได้|ไม่ถึง)|เชื่อม.*ไม่ได้|ping.*ไม่ได้|คำใบ้|แก้ยังไง/.test(lower)) {
       if (!workspace) return { text: "ตอนนี้ยังไม่มี Workspace ที่เปิดอยู่ครับ เปิด Workspace หรือเริ่มภารกิจก่อน แล้วผมจะตรวจอุปกรณ์และการเชื่อมต่อให้ทันที" };
       try {
-        const level = /ละเอียด|วิธีแก้|บอกวิธี/.test(lower) ? 3 : Math.min(hintLevel, 3);
+        // analyze is free (not counted as a hint), so use it to see whether this is a new problem.
+        const first = (await api.analyze(workspaceData(workspace))).issues[0];
+        const key = `${workspace.id}|${first ? `${first.code}|${first.deviceIds.join(",")}` : "none"}`;
+        hintState.level = key === hintState.key ? Math.min(hintState.level + 1, 3) : 1;
+        hintState.key = key;
+        const level = /ละเอียด|วิธีแก้|บอกวิธี/.test(lower) ? 3 : hintState.level;
         const result = await api.hint(workspaceData(workspace), level, workspace.attemptId);
         if (result.highlight.length) flash(workspace, result.highlight);
         return {
@@ -56,8 +63,12 @@
     return { text: "ผมยังจับหัวข้อจากคำถามนี้ได้ไม่ชัดครับ ลองระบุคำสำคัญ เช่น Router, IP, Gateway, Wi-Fi, DHCP, DNS, Ping หรือขอให้ผม “ตรวจปัญหา” ใน Workspace ได้เลย", search: query };
   }
 
+  // The workspace the learner is looking at right now (it may change while Navi stays open).
+  const currentWorkspace = (fallback) => (typeof active !== "undefined" ? active : fallback);
+
   function open(workspace, user) {
-    let hintLevel = 1, busy = false;
+    const hintState = { key: null, level: 0 };
+    let busy = false;
     const app = window.DesktopWindows.open({
       id: "navi",
       title: "Navi — Network Navigator",
@@ -108,12 +119,14 @@
       chat.appendChild(thinking);
       chat.scrollTop = chat.scrollHeight;
       let response;
+      app.workspace = currentWorkspace(app.workspace);
+      const context = root.querySelector(".navi-head p");
+      if (context) context.textContent = app.workspace ? `กำลังดูแล “${app.workspace.name}”` : "ผู้ช่วยเรียนรู้และแก้ปัญหาเครือข่าย";
       try {
-        response = await answer(app.workspace, app.user, question, hintLevel);
+        response = await answer(app.workspace, app.user, question, hintState);
       } catch (error) {
         response = { text: error?.message || "เกิดข้อผิดพลาดชั่วคราว ลองถามใหม่อีกครั้งครับ" };
       }
-      if (/ตรวจ|ปัญหา|คำใบ้/.test(question)) hintLevel = Math.min(hintLevel + 1, 3);
       thinking.remove();
       addMessage("navi", response.text, response.search);
       busy = false;
