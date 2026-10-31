@@ -1,0 +1,177 @@
+/* Teacher page as an OS X Yosemite app window on the desktop wallpaper.
+   Loaded after yosemite.css; only restyles — every id/class used by js/teacher.js is unchanged. */
+
+/* ---------- Desktop and window ---------- */
+.teacher-page {
+  min-height: 100vh;
+  padding: 28px 20px 40px;
+  background: #2b4a6b url("../assets/yosemite-wallpaper-v2.jpg") center / cover fixed no-repeat;
+}
+.teacher-page .t-window {
+  max-width: 1260px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(20, 24, 30, 0.32);
+  border-radius: 10px;
+  background: rgba(246, 246, 247, 0.94);
+  box-shadow: 0 24px 64px rgba(10, 18, 30, 0.42), 0 2px 10px rgba(10, 18, 30, 0.22), inset 0 1px rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(30px) saturate(160%);
+  -webkit-backdrop-filter: blur(30px) saturate(160%);
+}
+/* Signed out: a small window holding only the login form. */
+.teacher-page .t-window:has(#loginCard:not([hidden])) { max-width: 420px; margin-top: 9vh; }
+
+/* ---------- Unified title bar + toolbar ---------- */
+.teacher-page .t-titlebar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  background: linear-gradient(#ececec, #e2e2e3);
+}
+.teacher-page .t-lights {
+  position: absolute;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+}
+.teacher-page .t-lights i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(0, 0, 0, 0.18);
+}
+.teacher-page .t-lights i:nth-child(1) { background: #ff5f57; }
+.teacher-page .t-lights i:nth-child(2) { background: #febc2e; }
+.teacher-page .t-lights i:nth-child(3) { background: #28c840; }
+.teacher-page .t-title { font-size: 13px; font-weight: 500; color: #4a4a4d; letter-spacing: -0.01em; }
+
+.teacher-page .bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  min-height: 46px;
+  padding: 6px 14px 9px;
+  border-bottom: 1px solid #c4c4c7;
+  background: linear-gradient(#e2e2e3, #d6d6d8);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.teacher-page .brand { font-size: 14px; font-weight: 600; color: #2f2f32; }
+.teacher-page .brand small { font-size: 12px; color: #6e6e73; }
+.teacher-page .logo { width: 26px; height: 26px; }
+
+/* Yosemite push buttons */
+.teacher-page .bar-actions { gap: 8px; }
+.teacher-page .bar button,
+.teacher-page .bar .btn {
+  height: 25px;
+  padding: 0 11px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  background: linear-gradient(#ffffff, #f1f1f2);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.06);
+  color: #2f2f32;
+  font-size: 12px;
+}
+.teacher-page .bar button:hover,
+.teacher-page .bar .btn:hover { background: linear-gradient(#ffffff, #e8e8ea); }
+.teacher-page .bar button:active,
+.teacher-page .bar .btn:active { background: #dcdcdf; }
+.teacher-page #logoutBtn { color: #d0342c; }
+
+/* ---------- Content ---------- */
+.teacher-page main { max-width: none; padding: 18px 20px 26px; }
+.teacher-page .kpis { gap: 10px; }
+.teacher-page .kpi,
+.teacher-page .card {
+  border: 1px solid #d4d4d7;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.teacher-page .kpi { padding: 12px 14px; }
+.teacher-page .kpi b { font-size: 28px; font-weight: 300; letter-spacing: -0.02em; color: #1d1d1f; }
+.teacher-page .kpi span { font-size: 11px; color: #6e6e73; }
+.teacher-page .kpi.ok b { color: #1f9a3a; }
+.teacher-page .kpi.low b { color: #d0342c; }
+.teacher-page .card { padding: 14px 16px 16px; }
+.teacher-page .card h2 { font-size: 13px; font-weight: 600; color: #3a3a3d; letter-spacing: 0; }
+.teacher-page .note { color: #77777c; }
+
+/* Finder list view tables: quiet headers, zebra rows, blue hover */
+.teacher-page table { font-size: 12px; }
+.teacher-page th {
+  position: static;
+  padding: 5px 8px;
+  border-bottom: 1px solid #d9d9dc;
+  border-right: 1px solid #ececee;
+  background: #fff;
+  color: #6e6e73;
+  font-size: 11px;
+  font-weight: 500;
+}
+.teacher-page th:last-child { border-right: 0; }
+.teacher-page td { padding: 6px 8px; border-bottom: 0; }
+.teacher-page tbody tr:nth-child(even) td { background: #f4f5f7; }
+.teacher-page tbody tr:hover td { background: #e3eefc; }
+.teacher-page td button {
+  height: 21px;
+  padding: 0 9px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+  background: linear-gradient(#fff, #f0f0f1);
+  color: #c2302a;
+  font-size: 11px;
+}
+.teacher-page .bar-row .track { height: 6px; border-radius: 3px; background: #ececee; }
+.teacher-page .bar-row .fill { background: linear-gradient(90deg, #ff6b5f, #ff3b30); }
+.teacher-page .comment { border-left-color: #1687f8; border-radius: 0 4px 4px 0; background: #f4f7fb; }
+
+/* ---------- Sign-in (inside the small window) ---------- */
+.teacher-page .login {
+  margin: 0;
+  max-width: none;
+  padding: 22px 26px 24px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+.teacher-page .login h1 { margin: 0 0 14px; font-size: 17px; font-weight: 600; text-align: center; }
+.teacher-page .login label { font-size: 12px; font-weight: 500; color: #4a4a4d; }
+.teacher-page .login input {
+  height: 30px;
+  border: 1px solid #b9b9bd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.teacher-page .login button[type="submit"] {
+  height: 30px;
+  margin-top: 14px;
+  border: 1px solid #0a6fd8;
+  border-radius: 5px;
+  background: linear-gradient(#5aaeff, #1683f7);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.28);
+  font-size: 13px;
+}
+.teacher-page .login button[type="submit"]:active { background: linear-gradient(#2f8ff2, #0e6fd8); }
+.teacher-page .login a { display: block; margin-top: 4px; text-align: center; font-size: 12px; }
+.teacher-page .login .error:empty { display: none; }
+
+/* ---------- Small screens: the window fills the screen ---------- */
+@media (max-width: 700px) {
+  .teacher-page { padding: 0; }
+  .teacher-page .t-window,
+  .teacher-page .t-window:has(#loginCard:not([hidden])) {
+    max-width: none;
+    min-height: 100vh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .teacher-page main { padding: 14px 12px 22px; }
+}

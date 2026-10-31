@@ -109,6 +109,18 @@
     $("#kbWarn").textContent = msg;
     $("#kbWarn").hidden = !msg;
   };
+  // Show/hide the password so a mistyped or browser-autofilled password can be checked.
+  const setPasswordVisible = (show) => {
+    $("#tPass").type = show ? "text" : "password";
+    const label = show ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน";
+    $("#pwToggle").setAttribute("aria-pressed", String(show));
+    $("#pwToggle").setAttribute("aria-label", label);
+    $("#pwToggle").title = label;
+  };
+  $("#pwToggle").onclick = () => {
+    setPasswordVisible($("#tPass").type === "password");
+    $("#tPass").focus();
+  };
   $("#tPass").addEventListener("input", warnKeyboard);
   $("#tPass").addEventListener("keyup", warnKeyboard);
 
@@ -117,6 +129,7 @@
     try {
       await call("POST", "/api/auth/teacher", { password: $("#tPass").value });
       $("#tPass").value = "";
+      setPasswordVisible(false);
       load();
     } catch (err) {
       $("#loginError").textContent = err.message;

@@ -7,8 +7,12 @@
 <link rel="icon" href="assets/dock-assistant-yosemite.png">
 <link rel="stylesheet" href="css/teacher.css">
 <link rel="stylesheet" href="css/yosemite.css">
+<link rel="stylesheet" href="css/teacher-yosemite.css">
 </head>
 <body class="teacher-page yosemite-theme">
+<!-- Yosemite-style app window on the desktop wallpaper (look only; the lights are decorative). -->
+<div class="t-window">
+<div class="t-titlebar" aria-hidden="true"><span class="t-lights"><i></i><i></i><i></i></span><span class="t-title">CAI Net — สำหรับครูผู้สอน</span></div>
 <header class="bar">
   <div class="brand"><span class="logo"></span>CAI Net <small>สำหรับครูผู้สอน</small></div>
   <div class="bar-actions" id="barActions" hidden>
@@ -23,7 +27,10 @@
     <h1>เข้าสู่ระบบครูผู้สอน</h1>
     <form id="teacherForm">
       <label for="tPass">รหัสผ่านครู</label>
-      <input id="tPass" type="password" required autocomplete="current-password">
+      <div class="pw-field">
+        <input id="tPass" type="password" required autocomplete="current-password">
+        <button type="button" class="pw-toggle" id="pwToggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน">👁</button>
+      </div>
       <p class="kb-warn" id="kbWarn" hidden></p>
       <button type="submit">เข้าสู่ระบบ</button>
       <p class="error" id="loginError"></p>
@@ -61,6 +68,7 @@
     </div>
   </div>
 </main>
+</div>
 
 <script src="js/teacher.js"></script>
 </body>
