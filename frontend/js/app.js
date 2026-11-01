@@ -710,7 +710,7 @@ function showWifiPanel(w) {
   if (!current) return showDialog("Wi-Fi", "เพิ่ม Router, Access Point หรือ Notebook ก่อน");
   showDialog(
     "Wi-Fi Settings",
-    `<div class="wifi-panel"><label>อุปกรณ์</label><select id="wifiDevice">${devices.map((d) => `<option value="${esc(d.id)}" ${d === current ? "selected" : ""}>${esc(d.name)}${d.type === "laptop" ? " (เครื่องลูกข่าย)" : " (ตัวกระจายสัญญาณ)"}</option>`).join("")}</select><label>สถานะ</label><select id="wifiEnabled"><option value="on" ${current.wifi ? "selected" : ""}>เปิด Wi-Fi</option><option value="off" ${!current.wifi ? "selected" : ""}>ปิด Wi-Fi</option></select><label>${current.type === "laptop" ? "เชื่อมต่อกับ Wi-Fi ชื่อ (SSID)" : "ชื่อเครือข่ายที่กระจาย (SSID)"}</label><input id="wifiSsid" list="wifiSsidList" value="${esc(current.ssid || "CAI-Classroom")}"><datalist id="wifiSsidList">${[...new Set(w.nodes.filter((d) => d.type !== "laptop" && d.ssid).map((d) => d.ssid))].map((s) => `<option value="${esc(s)}">`).join("")}</datalist><label>รหัสผ่าน Wi-Fi</label><input id="wifiPassword" type="password" value="${esc(current.password ?? "classroom123")}"><div class="wifi-row"><button id="saveWifi">บันทึกการตั้งค่า</button><button id="startWifiLink">เชื่อมต่ออุปกรณ์</button></div></div>`,
+    `<div class="wifi-panel"><label>อุปกรณ์</label><select id="wifiDevice">${devices.map((d) => `<option value="${esc(d.id)}" ${d === current ? "selected" : ""}>${esc(d.name)}${d.type === "laptop" ? " (เครื่องลูกข่าย)" : " (ตัวกระจายสัญญาณ)"}</option>`).join("")}</select><label>สถานะ</label><select id="wifiEnabled"><option value="on" ${current.wifi ? "selected" : ""}>เปิด Wi-Fi</option><option value="off" ${!current.wifi ? "selected" : ""}>ปิด Wi-Fi</option></select><label>${current.type === "laptop" ? "เชื่อมต่อกับ Wi-Fi ชื่อ (SSID)" : "ชื่อเครือข่ายที่กระจาย (SSID)"}</label><input id="wifiSsid" list="wifiSsidList" value="${esc(current.ssid || "CAI-Classroom")}"><datalist id="wifiSsidList">${[...new Set(w.nodes.filter((d) => d.type !== "laptop" && d.ssid).map((d) => d.ssid))].map((s) => `<option value="${esc(s)}">`).join("")}</datalist><label>รหัสผ่าน Wi-Fi</label><div class="pw-field"><input id="wifiPassword" type="password" value="${esc(current.password ?? "classroom123")}"><button type="button" class="pw-toggle" id="wifiPwToggle" aria-label="แสดงรหัสผ่าน" aria-pressed="false" title="แสดงรหัสผ่าน">👁</button></div><div class="wifi-row"><button id="saveWifi">บันทึกการตั้งค่า</button><button id="startWifiLink">เชื่อมต่ออุปกรณ์</button></div></div>`,
   );
   setTimeout(() => {
     document.querySelector("#wifiDevice")?.addEventListener("change", (e) => {
@@ -718,6 +718,17 @@ function showWifiPanel(w) {
       render(w);
       showWifiPanel(w);
     });
+    // Show/hide the Wi-Fi password so learners can check what they typed.
+    document.querySelector("#wifiPwToggle").onclick = (e) => {
+      const input = document.querySelector("#wifiPassword"),
+        show = input.type === "password",
+        label = show ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน";
+      input.type = show ? "text" : "password";
+      e.currentTarget.setAttribute("aria-pressed", String(show));
+      e.currentTarget.setAttribute("aria-label", label);
+      e.currentTarget.title = label;
+      input.focus();
+    };
     document.querySelector("#saveWifi").onclick = () => {
       snapshot(w);
       current.wifi = document.querySelector("#wifiEnabled").value === "on";

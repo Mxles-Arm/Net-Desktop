@@ -1359,6 +1359,31 @@ svg.packet-route {
 .wifi-panel label:nth-of-type(n + 3) + :is(input, select),
 .wifi-row { grid-column: 1 / -1; }
 .wifi-row { margin-top: 2px; }
+/* Wi-Fi password with a show/hide eye button inside the field (js/app.js showWifiPanel). */
+.wifi-panel .pw-field { grid-column: 1 / -1; position: relative; }
+.wifi-panel .pw-field input { width: 100%; padding-right: 42px; }
+.wifi-panel .pw-toggle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 27px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  box-shadow: none;
+  color: #5a6670;
+  font-size: 15px;
+  opacity: 0.55;
+}
+.wifi-panel .pw-toggle:hover,
+.wifi-panel .pw-toggle[aria-pressed="true"] { opacity: 1; background: rgba(22, 135, 248, 0.1); }
 .encyclopedia { gap: 7px; }
 .encyclopedia .device-info {
   grid-template-columns: 42px 1fr;
